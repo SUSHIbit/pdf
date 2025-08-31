@@ -1,8 +1,16 @@
-@extends('layouts.guest')
-
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100">
-    <div class="relative">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'AI Document Q&A') }}</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="font-sans antialiased">
+    <div class="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100">
         <!-- Header -->
         <header class="absolute inset-x-0 top-0 z-50">
             <nav class="flex items-center justify-between p-6 lg:px-8">
@@ -119,5 +127,5 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+</body>
+</html>
