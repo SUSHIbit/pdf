@@ -19,6 +19,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     
+    // Document upload with more reasonable rate limiting (10 uploads per hour instead of 5 per minute)
+    Route::post('/upload', [DocumentController::class, 'store'])
+        ->name('documents.store')
+        ->middleware('throttle:10,60'); // 10 uploads per hour
+    
     // Payments
     Route::get('/credits', [PaymentController::class, 'packages'])->name('payment.packages');
     Route::post('/checkout', [PaymentController::class, 'checkout'])->name('payment.checkout');
@@ -29,11 +34,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-// Document upload with rate limiting
-Route::middleware(['auth', 'throttle:5,60'])->group(function () {
-    Route::post('/upload', [DocumentController::class, 'store'])->name('documents.store');
 });
 
 require __DIR__.'/auth.php';

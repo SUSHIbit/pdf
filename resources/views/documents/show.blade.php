@@ -2,73 +2,218 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $document->original_name }}</h1>
-                <div class="flex items-center space-x-4 text-sm text-gray-500">
-                    <span>{{ $document->getFileSizeFormatted() }}</span>
-                    <span>Processed {{ $document->updated_at->diffForHumans() }}</span>
-                </div>
-            </div>
-            
-            @if($document->questionSet)
-                <a href="{{ route('documents.download', $document) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
-                    </svg>
-                    Download Q&A
-                </a>
-            @endif
-        </div>
+    <!-- Back Navigation -->
+    <div class="mb-6">
+        <a href="{{ route('dashboard') }}" class="text-cyan-600 hover:text-cyan-700 font-medium">
+            ← Back to Dashboard
+        </a>
     </div>
 
-    @if($document->status === 'processing')
-        <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 text-blue-600 animate-spin mr-3" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-medium text-blue-800">Processing Document</h3>
-                    <p class="text-sm text-blue-700">Your document is being processed. This may take a few minutes.</p>
-                </div>
-            </div>
+    <!-- Document Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $document->original_name }}</h1>
+            <p class="text-gray-600">{{ $document->getFileSizeFormatted() }} • Processed {{ $document->updated_at->diffForHumans() }}</p>
         </div>
-    @elseif($document->status === 'failed')
-        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 text-red-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
-                </svg>
-                <div>
-                    <h3 class="text-sm font-medium text-red-800">Processing Failed</h3>
-                    <p class="text-sm text-red-700">There was an error processing your document. Please try uploading again.</p>
-                </div>
-            </div>
-        </div>
-    @endif
+        
+        @if($document->questionSet)
+            <a href="{{ route('documents.download', $document) }}" 
+               class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md">
+                Download Questions
+            </a>
+        @endif
+    </div>
 
-    @if($document->questionSet)
-        <div class="space-y-6">
+    @if($document->questionSet && count($document->questionSet->questions_answers) > 0)
+        <!-- Quiz Header -->
+        <div class="mb-8 p-6 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-cyan-900 mb-1">Interactive Quiz</h2>
+                    <p class="text-cyan-800">Click your answers and see results instantly</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl font-bold text-cyan-600" id="score">0/{{ count($document->questionSet->questions_answers) }}</div>
+                    <div class="text-sm text-cyan-700">Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="space-y-8">
             @foreach($document->questionSet->questions_answers as $index => $qa)
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                            Question {{ $index + 1 }}
-                        </h3>
-                        <p class="text-gray-800">{{ $qa['question'] }}</p>
-                    </div>
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm" data-question="{{ $index + 1 }}">
+                    <!-- Question -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        {{ $index + 1 }}. {{ $qa['question'] }}
+                    </h3>
                     
-                    <div class="border-t border-gray-100 pt-4">
-                        <h4 class="text-sm font-medium text-gray-700 mb-2">Answer</h4>
-                        <p class="text-gray-700 leading-relaxed">{{ $qa['answer'] }}</p>
-                    </div>
+                    <!-- Options -->
+                    @if(isset($qa['options']) && is_array($qa['options']))
+                        <div class="space-y-3">
+                            @foreach($qa['options'] as $optionIndex => $option)
+                                @php $letter = chr(65 + $optionIndex); @endphp
+                                <div class="option-choice p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-cyan-300 hover:bg-cyan-50 transition-all"
+                                     data-question="{{ $index + 1 }}" 
+                                     data-option="{{ $letter }}"
+                                     data-correct="{{ isset($qa['correct_answer']) && $qa['correct_answer'] === $letter ? 'true' : 'false' }}">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="option-circle w-8 h-8 border-2 border-gray-400 rounded-full flex items-center justify-center font-bold text-gray-600">
+                                            {{ $letter }}
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-gray-800">{{ $option }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Answer Display -->
+                        <div class="answer-reveal mt-4 p-4 bg-green-50 border border-green-200 rounded-lg hidden">
+                            <p class="text-green-800">
+                                <span class="font-bold">Correct Answer: {{ $qa['correct_answer'] ?? 'A' }}</span>
+                            </p>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-8 text-center space-x-4">
+            <button id="showAnswers" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
+                Show All Answers
+            </button>
+            <button id="resetQuiz" class="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium">
+                Reset Quiz
+            </button>
+        </div>
+    @else
+        <!-- No Questions Available -->
+        <div class="text-center py-12">
+            <p class="text-gray-600">No questions available for this document.</p>
+        </div>
     @endif
 </div>
+
+<style>
+.option-choice.selected {
+    border-color: #0891b2 !important;
+    background-color: #ecfeff !important;
+}
+
+.option-choice.correct {
+    border-color: #059669 !important;
+    background-color: #ecfdf5 !important;
+}
+
+.option-choice.incorrect {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+}
+
+.option-circle.selected {
+    background-color: #0891b2 !important;
+    color: white !important;
+    border-color: #0891b2 !important;
+}
+
+.option-circle.correct {
+    background-color: #059669 !important;
+    color: white !important;
+    border-color: #059669 !important;
+}
+
+.option-circle.incorrect {
+    background-color: #dc2626 !important;
+    color: white !important;
+    border-color: #dc2626 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let answeredQuestions = new Set();
+    const totalQuestions = document.querySelectorAll('[data-question]').length / document.querySelectorAll('.option-choice').length * document.querySelectorAll('[data-question="1"]').length;
+    const scoreDisplay = document.getElementById('score');
+    
+    // Calculate actual total questions
+    const questionDivs = document.querySelectorAll('.bg-white[data-question]');
+    const actualTotal = questionDivs.length;
+    
+    function updateScore() {
+        if (scoreDisplay) {
+            scoreDisplay.textContent = answeredQuestions.size + '/' + actualTotal;
+        }
+    }
+    
+    // Handle option clicks
+    document.querySelectorAll('.option-choice').forEach(function(option) {
+        option.addEventListener('click', function() {
+            const questionNum = this.getAttribute('data-question');
+            const selectedOption = this.getAttribute('data-option');
+            const isCorrect = this.getAttribute('data-correct') === 'true';
+            const questionDiv = document.querySelector('.bg-white[data-question="' + questionNum + '"]');
+            
+            // Clear previous selections in this question
+            const allOptionsInQuestion = questionDiv.querySelectorAll('.option-choice');
+            allOptionsInQuestion.forEach(function(opt) {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+                opt.querySelector('.option-circle').classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // Mark this option as selected and show if correct/incorrect
+            this.classList.add('selected');
+            this.querySelector('.option-circle').classList.add('selected');
+            
+            if (isCorrect) {
+                this.classList.add('correct');
+                this.querySelector('.option-circle').classList.add('correct');
+            } else {
+                this.classList.add('incorrect'); 
+                this.querySelector('.option-circle').classList.add('incorrect');
+            }
+            
+            // Add to answered questions
+            answeredQuestions.add(questionNum);
+            updateScore();
+        });
+    });
+    
+    // Show all answers
+    const showAnswersBtn = document.getElementById('showAnswers');
+    if (showAnswersBtn) {
+        showAnswersBtn.addEventListener('click', function() {
+            document.querySelectorAll('.answer-reveal').forEach(function(reveal) {
+                reveal.classList.remove('hidden');
+            });
+        });
+    }
+    
+    // Reset quiz
+    const resetQuizBtn = document.getElementById('resetQuiz');
+    if (resetQuizBtn) {
+        resetQuizBtn.addEventListener('click', function() {
+            // Clear all selections
+            document.querySelectorAll('.option-choice').forEach(function(option) {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.querySelector('.option-circle').classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // Hide all answers
+            document.querySelectorAll('.answer-reveal').forEach(function(reveal) {
+                reveal.classList.add('hidden');
+            });
+            
+            // Reset score
+            answeredQuestions.clear();
+            updateScore();
+        });
+    }
+    
+    // Initialize score
+    updateScore();
+});
+</script>
 @endsection
