@@ -1,7 +1,9 @@
 <?php
+// routes/web.php
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +27,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
     Route::patch('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+    
+    // Folders
+    Route::get('/folders', [FolderController::class, 'index'])->name('folders.index');
+    Route::post('/folders', [FolderController::class, 'store'])->name('folders.store');
+    Route::get('/folders/{folder}', [FolderController::class, 'show'])->name('folders.show');
+    Route::get('/folders/{folder}/edit', [FolderController::class, 'edit'])->name('folders.edit');
+    Route::patch('/folders/{folder}', [FolderController::class, 'update'])->name('folders.update');
+    Route::delete('/folders/{folder}', [FolderController::class, 'destroy'])->name('folders.destroy');
+    Route::post('/move-document', [FolderController::class, 'moveDocument'])->name('folders.move-document');
     
     // Payments
     Route::get('/credits', [PaymentController::class, 'packages'])->name('payment.packages');

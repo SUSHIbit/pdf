@@ -17,6 +17,7 @@ class Document extends Model
         'filename',
         'original_name',
         'title',
+        'folder_id',
         'file_path',
         'file_type',
         'file_size',
@@ -28,12 +29,18 @@ class Document extends Model
     protected $casts = [
         'file_size' => 'integer',
         'user_id' => 'integer',
+        'folder_id' => 'integer',
         'question_count' => 'integer',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(Folder::class);
     }
 
     public function questionSet(): HasOne
