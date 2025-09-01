@@ -107,6 +107,12 @@
                                                 <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
                                         </div>
+                                    @elseif($document->status === 'text_extracted')
+                                        <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                                            </svg>
+                                        </div>
                                     @elseif($document->status === 'failed')
                                         <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                                             <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
@@ -127,9 +133,16 @@
                                         {{ $document->original_name }}
                                     </p>
                                     <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
+                                        <span>{{ strtoupper($document->file_type) }}</span>
                                         <span>{{ $document->getFileSizeFormatted() }}</span>
                                         <span>{{ $document->created_at->diffForHumans() }}</span>
-                                        <span class="capitalize">{{ $document->status }}</span>
+                                        <span class="capitalize">
+                                            @if($document->status === 'text_extracted')
+                                                Ready for Processing
+                                            @else
+                                                {{ str_replace('_', ' ', $document->status) }}
+                                            @endif
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -139,13 +152,18 @@
                             @if($document->status === 'completed' && $document->questionSet)
                                 <a href="{{ route('documents.show', $document) }}" 
                                    class="text-cyan-600 hover:text-cyan-700 text-sm font-medium">
-                                    View Q&A
+                                    Take Quiz
                                 </a>
                                 <a href="{{ route('documents.download', $document) }}" 
-                                   class="text-gray-600 hover:text-gray-700">
+                                   class="text-gray-600 hover:text-gray-700" title="Download">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
                                     </svg>
+                                </a>
+                            @elseif($document->status === 'text_extracted')
+                                <a href="{{ route('documents.preview', $document) }}" 
+                                   class="text-amber-600 hover:text-amber-700 text-sm font-medium">
+                                    Preview Text
                                 </a>
                             @elseif($document->status === 'processing')
                                 <span class="text-sm text-blue-600">Processing...</span>

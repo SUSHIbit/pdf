@@ -4,7 +4,7 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Upload Document</h1>
-        <p class="text-gray-600">Upload a PDF, DOCX, or TXT file to generate multiple choice questions.</p>
+        <p class="text-gray-600">Upload a PDF, DOCX, PPTX, or TXT file to generate multiple choice questions.</p>
     </div>
 
     @if(auth()->user()->credits < 1)
@@ -42,11 +42,11 @@
                         <div class="flex text-sm text-gray-600">
                             <label for="document" class="relative cursor-pointer bg-white rounded-md font-medium text-cyan-600 hover:text-cyan-500 focus-within:outline-none">
                                 <span id="uploadText">Upload a file</span>
-                                <input id="document" name="document" type="file" accept=".pdf,.docx,.doc,.txt" class="sr-only" required>
+                                <input id="document" name="document" type="file" accept=".pdf,.docx,.doc,.txt,.pptx" class="sr-only" required>
                             </label>
                             <p class="pl-1">or drag and drop</p>
                         </div>
-                        <p class="text-xs text-gray-500">PDF, DOCX, or TXT up to 10MB</p>
+                        <p class="text-xs text-gray-500">PDF, DOCX, PPTX, or TXT up to 10MB</p>
                         <div id="selectedFile" class="hidden mt-2 text-sm text-green-600 font-medium"></div>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/>
                     </svg>
-                    <span id="submitText">Process Document (1 Credit)</span>
+                    <span id="submitText">Upload & Extract Text</span>
                 </button>
             </div>
         </form>
@@ -71,18 +71,46 @@
 
     <!-- File Requirements -->
     <div class="mt-6 bg-gray-50 rounded-md p-4">
-        <h3 class="text-sm font-medium text-gray-900 mb-2">File Requirements</h3>
-        <ul class="text-sm text-gray-600 space-y-1">
-            <li>• Supported formats: PDF, DOCX, DOC, TXT</li>
-            <li>• Maximum file size: 10MB</li>
-            <li>• Processing cost: 1 credit per document</li>
-            <li>• Generated: Up to 10 multiple choice questions</li>
-        </ul>
+        <h3 class="text-sm font-medium text-gray-900 mb-2">File Requirements & Process</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+                <h4 class="font-medium text-gray-700 mb-1">Supported Formats:</h4>
+                <ul class="space-y-1">
+                    <li>• PDF documents</li>
+                    <li>• Word documents (DOCX, DOC)</li>
+                    <li>• PowerPoint presentations (PPTX)</li>
+                    <li>• Text files (TXT)</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium text-gray-700 mb-1">Process Flow:</h4>
+                <ul class="space-y-1">
+                    <li>• 1. Upload your document</li>
+                    <li>• 2. Review extracted text</li>
+                    <li>• 3. Generate questions (1 credit)</li>
+                    <li>• 4. Take the interactive quiz</li>
+                </ul>
+            </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-gray-200">
+            <p class="text-xs text-gray-500">Maximum file size: 10MB • Up to 10 multiple choice questions per document</p>
+        </div>
     </div>
 </div>
 
+<!-- Pass PHP data to JavaScript via a script tag -->
+<script id="app-data" type="application/json">
+{
+    "userCredits": {{ auth()->check() ? auth()->user()->credits : 0 }}
+}
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Get data from the script tag
+    const appData = JSON.parse(document.getElementById('app-data').textContent);
+    const userCredits = appData.userCredits;
+    
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('document');
     const uploadText = document.getElementById('uploadText');
@@ -100,18 +128,23 @@ document.addEventListener('DOMContentLoaded', function() {
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            selectedFile.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            selectedFile.textContent = 'Selected: ' + file.name + ' (' + fileSize + ' MB)';
             selectedFile.classList.remove('hidden');
             uploadText.textContent = 'Change file';
             
             // Check file size
             if (file.size > 10 * 1024 * 1024) {
-                selectedFile.textContent = `File too large: ${file.name} - Maximum 10MB allowed`;
+                selectedFile.textContent = 'File too large: ' + file.name + ' - Maximum 10MB allowed';
                 selectedFile.classList.add('text-red-600');
                 selectedFile.classList.remove('text-green-600');
+                submitBtn.disabled = true;
             } else {
                 selectedFile.classList.add('text-green-600');
                 selectedFile.classList.remove('text-red-600');
+                if (userCredits >= 1) {
+                    submitBtn.disabled = false;
+                }
             }
         }
     });
@@ -133,8 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event('change'));
+            const file = files[0];
+            const allowedTypes = ['.pdf', '.docx', '.doc', '.txt', '.pptx'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (allowedTypes.includes(fileExtension)) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                alert('Please select a valid file type: PDF, DOCX, DOC, TXT, or PPTX');
+            }
         }
     });
 
@@ -147,16 +188,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         submitBtn.disabled = true;
-        submitText.textContent = 'Processing...';
+        submitText.textContent = 'Extracting Text...';
         
         // Show processing animation
-        submitBtn.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Processing Document...
-        `;
+        submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Extracting Text...';
     });
 });
 </script>

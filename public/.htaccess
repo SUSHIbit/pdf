@@ -36,3 +36,20 @@
     php_value max_execution_time 300
     php_value memory_limit 256M
 </IfModule>
+
+# MIME Type Support for Office Documents
+<IfModule mod_mime.c>
+    # PowerPoint files
+    AddType application/vnd.openxmlformats-officedocument.presentationml.presentation .pptx
+    AddType application/vnd.ms-powerpoint .ppt
+    
+    # Word files
+    AddType application/vnd.openxmlformats-officedocument.wordprocessingml.document .docx
+    AddType application/msword .doc
+    
+    # PDF files
+    AddType application/pdf .pdf
+    
+    # Text files
+    AddType text/plain .txt
+</IfModule>
