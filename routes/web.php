@@ -16,15 +16,15 @@ Route::middleware('auth')->group(function () {
     
     // Documents
     Route::get('/upload', [DocumentController::class, 'upload'])->name('documents.upload');
+    Route::post('/upload', [DocumentController::class, 'store'])->name('documents.store')->middleware('throttle:10,60');
+    
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
     Route::post('/documents/{document}/process', [DocumentController::class, 'process'])->name('documents.process');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
-    
-    // Document upload with rate limiting
-    Route::post('/upload', [DocumentController::class, 'store'])
-        ->name('documents.store')
-        ->middleware('throttle:10,60'); // 10 uploads per hour
+    Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
+    Route::patch('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     
     // Payments
     Route::get('/credits', [PaymentController::class, 'packages'])->name('payment.packages');

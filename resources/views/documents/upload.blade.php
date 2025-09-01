@@ -4,7 +4,7 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Upload Document</h1>
-        <p class="text-gray-600">Upload a PDF, DOCX, PPTX, or TXT file and choose how many questions to generate.</p>
+        <p class="text-gray-600">Upload a PDF, DOCX, PPTX, or TXT file to extract text and generate questions.</p>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -39,70 +39,6 @@
                 @enderror
             </div>
 
-            <!-- Question Count Selection -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-3">
-                    Number of Questions
-                </label>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="10" data-credits="1">
-                        <input type="radio" name="question_count" value="10" id="q10" class="sr-only" {{ old('question_count', '10') == '10' ? 'checked' : '' }}>
-                        <label for="q10" class="cursor-pointer">
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-900 mb-1">10</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">1 Credit</div>
-                            </div>
-                        </label>
-                    </div>
-                    
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="20" data-credits="2">
-                        <input type="radio" name="question_count" value="20" id="q20" class="sr-only" {{ old('question_count') == '20' ? 'checked' : '' }}>
-                        <label for="q20" class="cursor-pointer">
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-900 mb-1">20</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">2 Credits</div>
-                                <div class="absolute top-2 right-2 bg-cyan-500 text-white text-xs px-2 py-1 rounded-full">Popular</div>
-                            </div>
-                        </label>
-                    </div>
-                    
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="30" data-credits="3">
-                        <input type="radio" name="question_count" value="30" id="q30" class="sr-only" {{ old('question_count') == '30' ? 'checked' : '' }}>
-                        <label for="q30" class="cursor-pointer">
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-900 mb-1">30</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">3 Credits</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-                
-                @error('question_count')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Credit Check Alert -->
-            <div id="creditAlert" class="hidden bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
-                <div class="flex">
-                    <svg class="w-5 h-5 text-amber-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
-                    </svg>
-                    <div>
-                        <h3 class="text-sm font-medium text-amber-800">Insufficient Credits</h3>
-                        <p class="text-sm text-amber-700 mt-1" id="creditMessage"></p>
-                        <a href="{{ route('payment.packages') }}" 
-                           class="text-sm font-medium text-amber-800 underline hover:text-amber-900 mt-2 inline-block">
-                            Buy Credits →
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             <div class="flex justify-end">
                 <button type="submit" id="submitBtn"
                         class="inline-flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors">
@@ -117,40 +53,21 @@
 
     <!-- Information Section -->
     <div class="mt-6 bg-gray-50 rounded-md p-4">
-        <h3 class="text-sm font-medium text-gray-900 mb-2">Pricing & Features</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>
-                <h4 class="font-medium text-gray-700 mb-1">Credit Costs:</h4>
-                <ul class="space-y-1">
-                    <li>• 10 questions = 1 credit</li>
-                    <li>• 20 questions = 2 credits</li>
-                    <li>• 30 questions = 3 credits</li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-medium text-gray-700 mb-1">What You Get:</h4>
-                <ul class="space-y-1">
-                    <li>• Multiple choice questions</li>
-                    <li>• Detailed explanations</li>
-                    <li>• Interactive quiz mode</li>
-                    <li>• Downloadable results</li>
-                </ul>
-            </div>
+        <h3 class="text-sm font-medium text-gray-900 mb-2">What happens next?</h3>
+        <div class="text-sm text-gray-600">
+            <ol class="list-decimal list-inside space-y-1">
+                <li>Your document will be uploaded and text will be extracted</li>
+                <li>You'll review the extracted content</li>
+                <li>Choose how many questions to generate (10, 20, or 30)</li>
+                <li>AI will create questions with detailed explanations</li>
+                <li>Take the interactive quiz or download the results</li>
+            </ol>
         </div>
     </div>
 </div>
 
-<script id="app-data" type="application/json">
-{
-    "userCredits": {{ auth()->check() ? auth()->user()->credits : 0 }}
-}
-</script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const appData = JSON.parse(document.getElementById('app-data').textContent);
-    const userCredits = appData.userCredits;
-    
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('document');
     const uploadText = document.getElementById('uploadText');
@@ -158,49 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     const form = document.getElementById('uploadForm');
-    const creditAlert = document.getElementById('creditAlert');
-    const creditMessage = document.getElementById('creditMessage');
-    const questionOptions = document.querySelectorAll('.question-option');
-
-    let selectedCredits = 1; // Default to 10 questions
-
-    // Handle question option selection
-    questionOptions.forEach(function(option) {
-        option.addEventListener('click', function() {
-            const count = this.getAttribute('data-count');
-            const credits = parseInt(this.getAttribute('data-credits'));
-            
-            // Clear previous selections
-            questionOptions.forEach(opt => {
-                opt.classList.remove('border-cyan-500', 'bg-cyan-50');
-                opt.classList.add('border-gray-200');
-            });
-            
-            // Select this option
-            this.classList.remove('border-gray-200');
-            this.classList.add('border-cyan-500', 'bg-cyan-50');
-            
-            // Update radio button
-            document.getElementById('q' + count).checked = true;
-            selectedCredits = credits;
-            
-            checkCredits();
-        });
-    });
-
-    // Initialize first option as selected
-    document.querySelector('.question-option[data-count="10"]').click();
-
-    function checkCredits() {
-        if (userCredits < selectedCredits) {
-            creditAlert.classList.remove('hidden');
-            creditMessage.textContent = `You need ${selectedCredits} credits but only have ${userCredits}. Please purchase more credits.`;
-            submitBtn.disabled = true;
-        } else {
-            creditAlert.classList.add('hidden');
-            submitBtn.disabled = false;
-        }
-    }
 
     // File handling
     dropZone.addEventListener('click', function() {
@@ -223,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 selectedFile.classList.add('text-green-600');
                 selectedFile.classList.remove('text-red-600');
-                checkCredits();
+                submitBtn.disabled = false;
             }
         }
     });
@@ -266,19 +140,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (!document.querySelector('input[name="question_count"]:checked')) {
-            e.preventDefault();
-            alert('Please select the number of questions.');
-            return;
-        }
-        
         submitBtn.disabled = true;
         submitText.textContent = 'Extracting Text...';
         
         submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Extracting Text...';
     });
-
-    checkCredits();
 });
 </script>
 @endsection

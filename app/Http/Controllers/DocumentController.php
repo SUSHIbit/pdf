@@ -31,24 +31,12 @@ class DocumentController extends Controller
                 File::types(['pdf', 'docx', 'doc', 'txt', 'pptx'])
                     ->max(10 * 1024),
             ],
-            'question_count' => 'required|integer|in:10,20,30',
         ], [
             'document.max' => 'The file size must not exceed 10MB.',
             'document.mimes' => 'Only PDF, DOCX, DOC, TXT, and PPTX files are allowed.',
-            'question_count.required' => 'Please select the number of questions.',
-            'question_count.in' => 'Please select 10, 20, or 30 questions.',
         ]);
 
         $user = auth()->user();
-        $questionCount = $request->input('question_count');
-        $creditCost = $this->getCreditCost($questionCount);
-        
-        if ($user->credits < $creditCost) {
-            return redirect()
-                ->route('payment.packages')
-                ->with('error', "You need at least {$creditCost} credits to process this document with {$questionCount} questions.");
-        }
-
         $file = $request->file('document');
         $filename = time() . '_' . $file->getClientOriginalName();
         $path = $file->storeAs('documents', $filename, 'local');
@@ -62,14 +50,14 @@ class DocumentController extends Controller
                 'file_type' => $file->getClientOriginalExtension(),
                 'file_size' => $file->getSize(),
                 'status' => 'uploaded',
-                'question_count' => $questionCount,
+                'question_count' => 10, // Default
             ]);
 
             $this->extractTextFromDocument($document);
 
             return redirect()
                 ->route('documents.preview', $document)
-                ->with('success', 'Document uploaded successfully! Review the extracted content below.');
+                ->with('success', 'Document uploaded successfully! Choose question count and review the content.');
 
         } catch (\Exception $e) {
             Log::error('Document upload failed: ' . $e->getMessage());
@@ -99,19 +87,24 @@ class DocumentController extends Controller
         return view('documents.preview', compact('document'));
     }
 
-    public function process(Document $document)
+    public function process(Document $document, Request $request)
     {
         if ($document->user_id !== auth()->id()) {
             abort(403);
         }
 
+        $request->validate([
+            'question_count' => 'required|integer|in:10,20,30',
+        ]);
+
         $user = auth()->user();
-        $creditCost = $document->getCreditCost();
+        $questionCount = $request->input('question_count');
+        $creditCost = $this->getCreditCost($questionCount);
         
         if ($user->credits < $creditCost) {
             return redirect()
                 ->route('payment.packages')
-                ->with('error', "You need at least {$creditCost} credits to process this document with {$document->question_count} questions.");
+                ->with('error', "You need at least {$creditCost} credits to process this document with {$questionCount} questions.");
         }
 
         if (empty($document->extracted_text)) {
@@ -121,7 +114,11 @@ class DocumentController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($user, $document, $creditCost) {
+            DB::transaction(function () use ($user, $document, $creditCost, $questionCount) {
+                // Update document with selected question count
+                $document->update(['question_count' => $questionCount]);
+                
+                // Deduct credits
                 User::where('id', $user->id)->decrement('credits', $creditCost);
 
                 CreditTransaction::create([
@@ -129,7 +126,7 @@ class DocumentController extends Controller
                     'type' => 'usage',
                     'credits' => -$creditCost,
                     'amount' => null,
-                    'description' => "Document processing ({$document->question_count} questions): {$document->original_name}",
+                    'description' => "Document processing ({$questionCount} questions): {$document->original_name}",
                 ]);
             });
 
@@ -157,6 +154,67 @@ class DocumentController extends Controller
         return view('documents.show', compact('document'));
     }
 
+    public function edit(Document $document)
+    {
+        if ($document->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('documents.edit', compact('document'));
+    }
+
+    public function update(Document $document, Request $request)
+    {
+        if ($document->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $document->update([
+            'title' => $request->title,
+        ]);
+
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Document title updated successfully.');
+    }
+
+    public function destroy(Document $document)
+    {
+        if ($document->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        try {
+            // Delete file if exists
+            if ($document->file_path && Storage::exists($document->file_path)) {
+                Storage::delete($document->file_path);
+            }
+
+            // Delete related question set
+            if ($document->questionSet) {
+                $document->questionSet->delete();
+            }
+
+            // Delete document
+            $document->delete();
+
+            return redirect()
+                ->route('dashboard')
+                ->with('success', 'Document deleted successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('Document deletion failed: ' . $e->getMessage());
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to delete document. Please try again.');
+        }
+    }
+
     public function download(Document $document)
     {
         if ($document->user_id !== auth()->id()) {
@@ -167,7 +225,7 @@ class DocumentController extends Controller
             return redirect()->back()->with('error', 'No questions available for download.');
         }
 
-        $content = "Multiple Choice Questions for: {$document->original_name}\n";
+        $content = "Multiple Choice Questions for: {$document->getDisplayName()}\n";
         $content .= "Questions: {$document->question_count}\n";
         $content .= "Generated on: " . $document->created_at->format('Y-m-d H:i:s') . "\n";
         $content .= str_repeat("=", 60) . "\n\n";
@@ -195,7 +253,7 @@ class DocumentController extends Controller
 
         return response($content)
             ->header('Content-Type', 'text/plain')
-            ->header('Content-Disposition', 'attachment; filename="questions_' . $document->question_count . '_' . $document->filename . '.txt"');
+            ->header('Content-Disposition', 'attachment; filename="questions_' . $document->question_count . '_' . str_replace(' ', '_', $document->getDisplayName()) . '.txt"');
     }
 
     private function getCreditCost(int $questionCount): int

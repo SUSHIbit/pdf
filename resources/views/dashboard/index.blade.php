@@ -131,7 +131,12 @@
 
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900 truncate">
-                                        {{ $document->original_name }}
+                                        @if($document->title)
+                                            {{ $document->title }}
+                                            <span class="text-xs text-gray-500">({{ $document->original_name }})</span>
+                                        @else
+                                            {{ $document->original_name }}
+                                        @endif
                                     </p>
                                     <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
                                         <span>{{ strtoupper($document->file_type) }}</span>
@@ -150,7 +155,8 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center space-x-3">
+                        <!-- Actions -->
+                        <div class="flex items-center space-x-2">
                             @if($document->status === 'completed' && $document->questionSet)
                                 <a href="{{ route('documents.show', $document) }}" 
                                    class="text-cyan-600 hover:text-cyan-700 text-sm font-medium">
@@ -165,14 +171,30 @@
                             @elseif($document->status === 'text_extracted')
                                 <a href="{{ route('documents.preview', $document) }}" 
                                    class="text-amber-600 hover:text-amber-700 text-sm font-medium">
-                                    Preview & Process
+                                    Choose Questions
                                 </a>
-                                <span class="text-xs text-gray-500">{{ $document->getCreditCost() }} credit{{ $document->getCreditCost() > 1 ? 's' : '' }}</span>
                             @elseif($document->status === 'processing')
                                 <span class="text-sm text-blue-600">Processing...</span>
                             @elseif($document->status === 'failed')
                                 <span class="text-sm text-red-600">Failed</span>
                             @endif
+
+                            <!-- Simple Action Buttons -->
+                            <a href="{{ route('documents.edit', $document) }}" 
+                               class="text-gray-600 hover:text-gray-700" title="Edit Title">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                            </a>
+                            
+                            <button class="text-red-600 hover:text-red-700 delete-btn" 
+                                    data-id="{{ $document->id }}" 
+                                    data-name="{{ $document->title ?? $document->original_name }}"
+                                    title="Delete Document">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -199,4 +221,68 @@
         @endif
     </div>
 </div>
+
+<!-- Simple Delete Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full">
+            <h3 class="text-lg font-semibold mb-4">Delete Document</h3>
+            <p class="text-gray-600 mb-6">
+                Are you sure you want to delete "<span id="deleteDocName"></span>"?
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDelete" class="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteForm = document.getElementById('deleteForm');
+    const deleteDocName = document.getElementById('deleteDocName');
+    const cancelDelete = document.getElementById('cancelDelete');
+    
+    // Handle delete button clicks
+    document.querySelectorAll('.delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const docId = this.getAttribute('data-id');
+            const docName = this.getAttribute('data-name');
+            
+            deleteDocName.textContent = docName;
+            deleteForm.action = '/documents/' + docId;
+            deleteModal.classList.remove('hidden');
+        });
+    });
+    
+    // Handle cancel
+    cancelDelete.addEventListener('click', function() {
+        deleteModal.classList.add('hidden');
+    });
+    
+    // Close on click outside
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
+    
+    // Close on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
+            deleteModal.classList.add('hidden');
+        }
+    });
+});
+</script>
 @endsection

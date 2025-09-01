@@ -16,6 +16,7 @@ class Document extends Model
         'user_id',
         'filename',
         'original_name',
+        'title',
         'file_path',
         'file_type',
         'file_size',
@@ -62,5 +63,10 @@ class Document extends Model
             30 => 3,
             default => 1,
         };
+    }
+
+    public function getDisplayName(): string
+    {
+        return $this->title ?: $this->original_name;
     }
 }
