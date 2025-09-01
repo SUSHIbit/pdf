@@ -21,11 +21,13 @@ class Document extends Model
         'file_size',
         'status',
         'extracted_text',
+        'question_count',
     ];
 
     protected $casts = [
         'file_size' => 'integer',
         'user_id' => 'integer',
+        'question_count' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -50,5 +52,15 @@ class Document extends Model
         }
         
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    public function getCreditCost(): int
+    {
+        return match($this->question_count) {
+            10 => 1,
+            20 => 2,
+            30 => 3,
+            default => 1,
+        };
     }
 }

@@ -1,3 +1,4 @@
+{{-- resources/views/dashboard/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -51,8 +52,8 @@
                     </div>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500">Completed</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $documents->where('status', 'completed')->count() }}</p>
+                    <p class="text-sm font-medium text-gray-500">Total Questions</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $documents->where('status', 'completed')->sum('question_count') }}</p>
                 </div>
             </div>
         </div>
@@ -135,6 +136,7 @@
                                     <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
                                         <span>{{ strtoupper($document->file_type) }}</span>
                                         <span>{{ $document->getFileSizeFormatted() }}</span>
+                                        <span>{{ $document->question_count }} questions</span>
                                         <span>{{ $document->created_at->diffForHumans() }}</span>
                                         <span class="capitalize">
                                             @if($document->status === 'text_extracted')
@@ -163,8 +165,9 @@
                             @elseif($document->status === 'text_extracted')
                                 <a href="{{ route('documents.preview', $document) }}" 
                                    class="text-amber-600 hover:text-amber-700 text-sm font-medium">
-                                    Preview Text
+                                    Preview & Process
                                 </a>
+                                <span class="text-xs text-gray-500">{{ $document->getCreditCost() }} credit{{ $document->getCreditCost() > 1 ? 's' : '' }}</span>
                             @elseif($document->status === 'processing')
                                 <span class="text-sm text-blue-600">Processing...</span>
                             @elseif($document->status === 'failed')

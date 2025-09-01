@@ -1,3 +1,4 @@
+{{-- resources/views/documents/preview.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -49,25 +50,46 @@
                 </div>
             </div>
 
+            <!-- Question Info -->
+            <div class="bg-cyan-50 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-cyan-900">{{ $document->question_count }} Questions Selected</h3>
+                            <p class="text-sm text-cyan-700">Will generate {{ $document->question_count }} multiple choice questions with explanations</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-cyan-600">{{ $document->getCreditCost() }}</div>
+                        <div class="text-sm text-cyan-700">Credit{{ $document->getCreditCost() > 1 ? 's' : '' }}</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div class="text-sm text-gray-600">
-                    <span class="font-medium">Next Step:</span> Review the extracted content and generate questions
+                    <span class="font-medium">Next Step:</span> Generate {{ $document->question_count }} questions with detailed explanations
                 </div>
                 <div class="flex space-x-3">
                     <form action="{{ route('documents.process', $document) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" 
                                 class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md transition-colors"
-                                @if(auth()->user()->credits < 1) disabled title="Insufficient credits" @endif>
+                                @if(auth()->user()->credits < $document->getCreditCost()) disabled title="Insufficient credits" @endif>
                             <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
                             </svg>
-                            Generate Questions (1 Credit)
+                            Generate Questions ({{ $document->getCreditCost() }} Credit{{ $document->getCreditCost() > 1 ? 's' : '' }})
                         </button>
                     </form>
                     
-                    @if(auth()->user()->credits < 1)
+                    @if(auth()->user()->credits < $document->getCreditCost())
                         <a href="{{ route('payment.packages') }}" 
                            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition-colors">
                             Buy Credits
@@ -119,22 +141,21 @@
         </div>
     </div>
 
-    <!-- Preview Notice -->
+    <!-- Processing Info -->
     <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div class="flex">
             <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
             </svg>
             <div>
-                <h3 class="text-sm font-medium text-blue-800 mb-1">Preview Complete</h3>
+                <h3 class="text-sm font-medium text-blue-800 mb-1">Ready for Processing</h3>
                 <p class="text-sm text-blue-700">
-                    This is the text that was extracted from your <strong>{{ strtoupper($document->file_type) }}</strong> document. 
-                    When you generate questions, our AI will analyze this content to create relevant multiple-choice questions. 
-                    Please review the extracted text to ensure it captured your document content correctly.
+                    This text will be analyzed by our AI to generate <strong>{{ $document->question_count }} multiple choice questions</strong> with detailed explanations. 
+                    Each question will include four answer options and a comprehensive explanation to help with learning.
                 </p>
                 <div class="mt-2">
                     <p class="text-xs text-blue-600 font-medium">
-                        💡 Tip: The AI works best with well-structured, informative content that contains clear concepts and facts.
+                        💡 Tip: Our AI creates questions that test comprehension, analysis, and key concepts from your document.
                     </p>
                 </div>
             </div>
