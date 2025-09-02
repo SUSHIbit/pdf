@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Landing page upload route for guests
+// Landing page upload route for guests - Set session flag for pending upload
 Route::post('/landing-upload', function (Request $request) {
     // Store upload intention in session
     $request->session()->put('pending_upload', true);

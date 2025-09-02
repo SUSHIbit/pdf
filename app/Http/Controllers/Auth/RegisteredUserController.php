@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Auth/RegisteredUserController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -60,9 +59,9 @@ class RegisteredUserController extends Controller
             Auth::login($user);
         });
 
-        // Check if there's a pending file upload
+        // Check if there's a pending file upload from landing page
         if (session()->has('pending_upload')) {
-            return redirect()->route('documents.upload');
+            return redirect()->route('documents.upload')->with('from_landing', true);
         }
 
         return redirect(RouteServiceProvider::HOME);

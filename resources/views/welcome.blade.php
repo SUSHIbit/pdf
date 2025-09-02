@@ -9,7 +9,7 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased">
+<body class="font-sans antialiased" data-authenticated="{{ auth()->check() ? '1' : '0' }}">
     <div class="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100">
         <!-- Header -->
         <header class="absolute inset-x-0 top-0 z-50">
@@ -350,7 +350,8 @@
                     
                     <a href="{{ route('login') }}" 
                        class="w-full inline-flex justify-center items-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors">
-<path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"/>
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"/>
                         </svg>
                         Sign In
                     </a>
@@ -367,10 +368,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check authentication status
-        var isUserAuthenticated = false;
-        @auth
-            isUserAuthenticated = true;
-        @endauth
+        const isUserAuthenticated = document.body.getAttribute('data-authenticated') === '1';
 
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
