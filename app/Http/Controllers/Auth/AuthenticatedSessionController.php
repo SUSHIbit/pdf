@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Auth/AuthenticatedSessionController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -28,6 +29,11 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Check if there's a pending upload from the landing page
+        if (session()->has('pending_upload')) {
+            return redirect()->route('documents.upload')->with('from_landing', true);
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

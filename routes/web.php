@@ -1,5 +1,4 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
@@ -7,10 +6,19 @@ use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Landing page upload route for guests
+Route::post('/landing-upload', function (Request $request) {
+    // Store upload intention in session
+    $request->session()->put('pending_upload', true);
+    
+    return redirect()->route('login')->with('info', 'Please log in to upload documents');
+})->name('landing.upload');
 
 Route::middleware('auth')->group(function () {
     // Dashboard

@@ -8,6 +8,12 @@
         </div>
     @endif
 
+    @if(session('info'))
+        <div class="font-medium text-sm text-cyan-600 mb-4 p-3 bg-cyan-50 border border-cyan-200 rounded-md">
+            {{ session('info') }}
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
 

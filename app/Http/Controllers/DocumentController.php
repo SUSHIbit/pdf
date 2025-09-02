@@ -19,7 +19,10 @@ class DocumentController extends Controller
 {
     public function upload()
     {
-        return view('documents.upload');
+        // Check if there's a pending upload from the landing page
+        $hasPendingUpload = session()->has('pending_upload') || request()->has('from_landing');
+        
+        return view('documents.upload', compact('hasPendingUpload'));
     }
 
     public function store(Request $request)
@@ -56,6 +59,16 @@ class DocumentController extends Controller
 
             $this->extractTextFromDocument($document);
 
+            // Clear any pending upload session
+            session()->forget('pending_upload');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('documents.format', $document)
+                ]);
+            }
+
             return redirect()
                 ->route('documents.format', $document)
                 ->with('success', 'Document uploaded successfully! Choose your study format.');
@@ -65,6 +78,13 @@ class DocumentController extends Controller
             
             if (Storage::exists($path)) {
                 Storage::delete($path);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process document. Please try again.'
+                ], 422);
             }
             
             return redirect()

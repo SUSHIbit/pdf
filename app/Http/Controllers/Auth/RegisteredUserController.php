@@ -1,15 +1,18 @@
 <?php
+// app/Http/Controllers/Auth/RegisteredUserController.php
 
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\CreditTransaction;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -36,15 +39,31 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'credits' => 5,
+            ]);
 
-        event(new Registered($user));
+            // Log the welcome credits
+            CreditTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'purchase',
+                'credits' => 5,
+                'amount' => null,
+                'description' => 'Welcome bonus - 5 free credits',
+            ]);
 
-        Auth::login($user);
+            event(new Registered($user));
+            Auth::login($user);
+        });
+
+        // Check if there's a pending file upload
+        if (session()->has('pending_upload')) {
+            return redirect()->route('documents.upload');
+        }
 
         return redirect(RouteServiceProvider::HOME);
     }

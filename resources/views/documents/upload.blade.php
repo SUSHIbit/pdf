@@ -5,6 +5,16 @@
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Upload Document</h1>
         <p class="text-gray-600">Upload a PDF, DOCX, PPTX, or TXT file to extract text and generate questions.</p>
+        @if(isset($hasPendingUpload) && $hasPendingUpload)
+            <div class="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-md">
+                <p class="text-cyan-800 text-sm">
+                    <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                    </svg>
+                    Welcome! You can now upload your document to get started.
+                </p>
+            </div>
+        @endif
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -57,10 +67,10 @@
         <div class="text-sm text-gray-600">
             <ol class="list-decimal list-inside space-y-1">
                 <li>Your document will be uploaded and text will be extracted</li>
-                <li>You'll review the extracted content</li>
-                <li>Choose how many questions to generate (10, 20, or 30)</li>
-                <li>AI will create questions with detailed explanations</li>
-                <li>Take the interactive quiz or download the results</li>
+                <li>You'll choose between Q&A questions or flashcards</li>
+                <li>Select how many items to generate (10, 20, or 30)</li>
+                <li>AI will create your study materials with explanations</li>
+                <li>Take the interactive quiz or study with flashcards</li>
             </ol>
         </div>
     </div>
@@ -75,6 +85,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
     const form = document.getElementById('uploadForm');
+
+    // Check for pending upload from session storage
+    if (sessionStorage.getItem('pendingUpload')) {
+        const fileData = JSON.parse(sessionStorage.getItem('pendingUploadFile') || '{}');
+        if (fileData && fileData.name) {
+            // Convert base64 back to file
+            fetch(fileData.data)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], fileData.name, { type: fileData.type });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                    
+                    selectedFile.textContent = 'Selected: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    selectedFile.classList.remove('hidden');
+                    uploadText.textContent = 'Change file';
+                })
+                .catch(function(error) {
+                    console.log('Error loading pending file:', error);
+                });
+            
+            // Clear session storage
+            sessionStorage.removeItem('pendingUpload');
+            sessionStorage.removeItem('pendingUploadFile');
+        }
+    }
 
     // File handling
     dropZone.addEventListener('click', function() {
