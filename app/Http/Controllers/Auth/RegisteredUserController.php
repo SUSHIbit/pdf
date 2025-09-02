@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Auth/RegisteredUserController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -38,6 +40,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // CRITICAL FIX: Check for pending upload BEFORE creating user
+        $hasPendingUpload = session()->has('pending_upload');
+        
+        Log::info('Registration process started', [
+            'email' => $request->email,
+            'has_pending_upload' => $hasPendingUpload
+        ]);
+
         DB::transaction(function () use ($request) {
             $user = User::create([
                 'name' => $request->name,
@@ -59,11 +69,26 @@ class RegisteredUserController extends Controller
             Auth::login($user);
         });
 
-        // Check if there's a pending file upload from landing page
-        if (session()->has('pending_upload')) {
-            return redirect()->route('documents.upload')->with('from_landing', true);
+        // ENHANCED FIX: Check for pending upload and handle redirect
+        if ($hasPendingUpload) {
+            Log::info('User has pending upload - redirecting to upload page', [
+                'user_id' => auth()->id()
+            ]);
+            
+            // Clear the pending upload flag and set from_landing flag
+            session()->forget('pending_upload');
+            session(['from_landing' => true]);
+            
+            return redirect()->route('documents.upload')
+                ->with('from_landing', true)
+                ->with('success', 'Welcome! Your account has been created with 5 free credits. You can now upload your document.');
         }
 
-        return redirect(RouteServiceProvider::HOME);
+        Log::info('Normal registration - redirecting to dashboard', [
+            'user_id' => auth()->id()
+        ]);
+
+        return redirect(RouteServiceProvider::HOME)
+            ->with('success', 'Welcome! Your account has been created with 5 free credits.');
     }
 }

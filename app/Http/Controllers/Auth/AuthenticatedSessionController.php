@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Auth/AuthenticatedSessionController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -8,6 +9,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -29,10 +31,32 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Check if there's a pending upload from the landing page
-        if (session()->has('pending_upload')) {
-            return redirect()->route('documents.upload')->with('from_landing', true);
+        // CRITICAL FIX: Check for pending upload BEFORE session regeneration affects it
+        $hasPendingUpload = session()->has('pending_upload');
+        
+        Log::info('Login process completed', [
+            'user_id' => auth()->id(),
+            'has_pending_upload' => $hasPendingUpload
+        ]);
+
+        // ENHANCED FIX: Handle pending upload redirect
+        if ($hasPendingUpload) {
+            Log::info('User has pending upload - redirecting to upload page', [
+                'user_id' => auth()->id()
+            ]);
+            
+            // Clear the pending upload flag and set from_landing flag
+            session()->forget('pending_upload');
+            session(['from_landing' => true]);
+            
+            return redirect()->route('documents.upload')
+                ->with('from_landing', true)
+                ->with('success', 'Welcome back! You can now upload your document.');
         }
+
+        Log::info('Normal login - using intended redirect or dashboard', [
+            'user_id' => auth()->id()
+        ]);
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

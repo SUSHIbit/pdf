@@ -451,6 +451,18 @@
                         data: e.target.result
                     }));
                     sessionStorage.setItem('pendingUpload', 'true');
+                    
+                    // CRITICAL FIX: Set server-side session flag via AJAX
+                    fetch('/set-pending-upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ pending: true })
+                    }).catch(function(error) {
+                        console.error('Error setting server session:', error);
+                    });
                 } catch (error) {
                     console.error('Error storing file data:', error);
                 }

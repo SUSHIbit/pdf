@@ -12,6 +12,15 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// CRITICAL FIX: Add endpoint to set pending upload session from welcome page
+Route::post('/set-pending-upload', function (Request $request) {
+    if ($request->has('pending') && $request->pending) {
+        session(['pending_upload' => true]);
+        return response()->json(['success' => true]);
+    }
+    return response()->json(['success' => false]);
+});
+
 // Landing page upload route for guests - Set session flag for pending upload
 Route::post('/landing-upload', function (Request $request) {
     // Store upload intention in session

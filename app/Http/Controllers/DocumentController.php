@@ -20,7 +20,7 @@ class DocumentController extends Controller
     public function upload()
     {
         // Check if there's a pending upload from the landing page
-        $hasPendingUpload = session()->has('pending_upload') || request()->has('from_landing');
+        $hasPendingUpload = session()->has('pending_upload') || session()->has('from_landing');
         
         return view('documents.upload', compact('hasPendingUpload'));
     }
@@ -59,8 +59,8 @@ class DocumentController extends Controller
 
             $this->extractTextFromDocument($document);
 
-            // Clear any pending upload session
-            session()->forget('pending_upload');
+            // Clear any pending upload sessions - IMPORTANT: Clear these flags
+            session()->forget(['pending_upload', 'from_landing']);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -69,6 +69,7 @@ class DocumentController extends Controller
                 ]);
             }
 
+            // FIXED: Always redirect to format selection, never to dashboard
             return redirect()
                 ->route('documents.format', $document)
                 ->with('success', 'Document uploaded successfully! Choose your study format.');

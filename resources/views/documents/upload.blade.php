@@ -5,22 +5,13 @@
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Upload Document</h1>
         <p class="text-gray-600">Upload a PDF, DOCX, PPTX, or TXT file to extract text and generate questions.</p>
-        @if(isset($hasPendingUpload) && $hasPendingUpload)
+        @if(session('from_landing'))
             <div class="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-md">
                 <p class="text-cyan-800 text-sm">
                     <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
                     </svg>
-                    Welcome! Your previously selected file has been restored. You can now upload it or select a different one.
-                </p>
-            </div>
-        @elseif(session('from_landing'))
-            <div class="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-md">
-                <p class="text-cyan-800 text-sm">
-                    <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
-                    </svg>
-                    Welcome! You can now upload your document to get started.
+                    Welcome! Your previously selected file should be restored automatically.
                 </p>
             </div>
         @endif
@@ -95,10 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitText = document.getElementById('submitText');
     const form = document.getElementById('uploadForm');
 
-    // Check for pending upload from session storage
-    if (sessionStorage.getItem('pendingUpload')) {
+    // ENHANCED: Check for pending upload from session storage
+    if (sessionStorage.getItem('pendingUpload') === 'true') {
         const fileData = JSON.parse(sessionStorage.getItem('pendingUploadFile') || '{}');
-        if (fileData && fileData.name) {
+        if (fileData && fileData.name && fileData.data) {
+            console.log('Restoring file from sessionStorage:', fileData.name);
+            
             // Convert base64 back to file
             fetch(fileData.data)
                 .then(res => res.blob())
@@ -108,15 +101,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     dataTransfer.items.add(file);
                     fileInput.files = dataTransfer.files;
                     
-                    selectedFile.textContent = 'Restored: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    selectedFile.textContent = '✅ Restored: ' + file.name + ' (' + fileSize + ' MB)';
                     selectedFile.classList.remove('hidden');
+                    selectedFile.classList.add('text-green-600');
                     uploadText.textContent = 'Change file';
+                    
+                    console.log('File successfully restored');
                 })
                 .catch(function(error) {
-                    console.log('Error loading pending file:', error);
+                    console.error('Error restoring file:', error);
+                    selectedFile.textContent = '⚠️ Error restoring file. Please select again.';
+                    selectedFile.classList.remove('hidden');
+                    selectedFile.classList.add('text-amber-600');
                 });
             
-            // Clear session storage
+            // Clear session storage after restoration attempt
+            sessionStorage.removeItem('pendingUpload');
+            sessionStorage.removeItem('pendingUploadFile');
+        } else {
+            console.log('No valid file data found in sessionStorage');
+            // Clean up if data is corrupted
             sessionStorage.removeItem('pendingUpload');
             sessionStorage.removeItem('pendingUploadFile');
         }
