@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-500">Total Questions</p>
+                    <p class="text-sm font-medium text-gray-500">Total Items</p>
                     <p class="text-xl font-bold text-gray-900">{{ auth()->user()->documents()->where('status', 'completed')->sum('question_count') }}</p>
                 </div>
             </div>
@@ -226,7 +226,20 @@
                                             <div class="flex items-center space-x-3 text-xs text-gray-500 mt-0.5">
                                                 <span>{{ strtoupper($document->file_type) }}</span>
                                                 <span>{{ $document->getFileSizeFormatted() }}</span>
-                                                <span>{{ $document->question_count }}Q</span>
+                                                <span class="flex items-center">
+                                                    @if($document->format === 'flashcard')
+                                                        <svg class="w-3 h-3 mr-1 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+                                                            <path fill-rule="evenodd" d="M3 8a2 2 0 012-2v9a2 2 0 01-2-2V8z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        {{ $document->question_count }} cards
+                                                    @else
+                                                        <svg class="w-3 h-3 mr-1 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"/>
+                                                        </svg>
+                                                        {{ $document->question_count }}Q
+                                                    @endif
+                                                </span>
                                                 <span>{{ $document->created_at->diffForHumans() }}</span>
                                                 <span class="capitalize">
                                                     @if($document->status === 'text_extracted')
@@ -244,8 +257,8 @@
                                 <div class="flex items-center space-x-2 ml-4">
                                     @if($document->status === 'completed' && $document->questionSet)
                                         <a href="{{ route('documents.show', $document) }}" 
-                                           class="text-cyan-600 hover:text-cyan-700 text-sm font-medium">
-                                            Quiz
+                                           class="{{ $document->format === 'flashcard' ? 'text-purple-600 hover:text-purple-700' : 'text-cyan-600 hover:text-cyan-700' }} text-sm font-medium">
+                                            {{ $document->format === 'flashcard' ? 'Study' : 'Quiz' }}
                                         </a>
                                         <a href="{{ route('documents.download', $document) }}" 
                                            class="text-gray-400 hover:text-gray-600" title="Download">
@@ -254,9 +267,9 @@
                                             </svg>
                                         </a>
                                     @elseif($document->status === 'text_extracted')
-                                        <a href="{{ route('documents.preview', $document) }}" 
+                                        <a href="{{ route('documents.format', $document) }}" 
                                            class="text-amber-600 hover:text-amber-700 text-sm font-medium">
-                                            Process
+                                            Choose Format
                                         </a>
                                     @elseif($document->status === 'processing')
                                         <span class="text-sm text-blue-600">Processing...</span>

@@ -4,8 +4,8 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Navigation -->
     <div class="mb-6">
-        <a href="{{ route('dashboard') }}" class="text-cyan-600 hover:text-cyan-700 font-medium">
-            ← Back to Dashboard
+        <a href="{{ route('documents.format', $document) }}" class="text-cyan-600 hover:text-cyan-700 font-medium">
+            ← Back to Format Selection
         </a>
     </div>
 
@@ -39,11 +39,19 @@
                 </div>
                 
                 <div class="text-right">
-                    <div class="flex items-center text-green-600 mb-2">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                        </svg>
-                        <span class="text-sm font-medium">Text Extracted</span>
+                    <div class="flex items-center {{ request('format') === 'flashcard' ? 'text-purple-600' : 'text-cyan-600' }} mb-2">
+                        @if(request('format') === 'flashcard')
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+                                <path fill-rule="evenodd" d="M3 8a2 2 0 012-2v9a2 2 0 01-2-2V8z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-sm font-medium">Flashcard Format</span>
+                        @else
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"/>
+                            </svg>
+                            <span class="text-sm font-medium">MCQ Format</span>
+                        @endif
                     </div>
                     <p class="text-xs text-gray-500">{{ str_word_count($document->extracted_text) }} words extracted</p>
                 </div>
@@ -51,45 +59,70 @@
         </div>
     </div>
 
-    <!-- Question Selection Form -->
+    <!-- Quantity Selection Form -->
     <div class="mb-8">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Choose Number of Questions</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                @if(request('format') === 'flashcard')
+                    Choose Number of Flashcards
+                @else
+                    Choose Number of Questions
+                @endif
+            </h2>
             
             <form action="{{ route('documents.process', $document) }}" method="POST" id="processForm">
                 @csrf
+                <input type="hidden" name="format" value="{{ request('format', 'mcq') }}">
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="10" data-credits="1">
+                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-400 transition-colors" data-count="10" data-credits="1">
                         <input type="radio" name="question_count" value="10" id="q10" class="sr-only" checked>
                         <label for="q10" class="cursor-pointer">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-900 mb-1">10</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">1 Credit</div>
+                                <div class="text-sm text-gray-600 mb-2">
+                                    @if(request('format') === 'flashcard')
+                                        Flashcards
+                                    @else
+                                        Questions
+                                    @endif
+                                </div>
+                                <div class="text-xs text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600 font-medium">1 Credit</div>
                             </div>
                         </label>
                     </div>
                     
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="20" data-credits="2">
+                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-400 transition-colors" data-count="20" data-credits="2">
                         <input type="radio" name="question_count" value="20" id="q20" class="sr-only">
                         <label for="q20" class="cursor-pointer">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-900 mb-1">20</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">2 Credits</div>
-                                <div class="absolute top-2 right-2 bg-cyan-500 text-white text-xs px-2 py-1 rounded-full">Popular</div>
+                                <div class="text-sm text-gray-600 mb-2">
+                                    @if(request('format') === 'flashcard')
+                                        Flashcards
+                                    @else
+                                        Questions
+                                    @endif
+                                </div>
+                                <div class="text-xs text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600 font-medium">2 Credits</div>
+                                <div class="absolute top-2 right-2 bg-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-500 text-white text-xs px-2 py-1 rounded-full">Popular</div>
                             </div>
                         </label>
                     </div>
                     
-                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-cyan-400 transition-colors" data-count="30" data-credits="3">
+                    <div class="question-option relative border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-400 transition-colors" data-count="30" data-credits="3">
                         <input type="radio" name="question_count" value="30" id="q30" class="sr-only">
                         <label for="q30" class="cursor-pointer">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-900 mb-1">30</div>
-                                <div class="text-sm text-gray-600 mb-2">Questions</div>
-                                <div class="text-xs text-cyan-600 font-medium">3 Credits</div>
+                                <div class="text-sm text-gray-600 mb-2">
+                                    @if(request('format') === 'flashcard')
+                                        Flashcards
+                                    @else
+                                        Questions
+                                    @endif
+                                </div>
+                                <div class="text-xs text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600 font-medium">3 Credits</div>
                             </div>
                         </label>
                     </div>
@@ -99,7 +132,7 @@
                 <div id="creditAlert" class="hidden bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
                     <div class="flex">
                         <svg class="w-5 h-5 text-amber-400 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
                        </svg>
                        <div>
                            <h3 class="text-sm font-medium text-amber-800">Insufficient Credits</h3>
@@ -114,30 +147,36 @@
 
                <div class="flex justify-end">
                    <button type="submit" id="generateBtn"
-                           class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors">
+                           class="px-6 py-3 bg-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600 hover:bg-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors">
                        <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
                        </svg>
-                       <span id="generateText">Generate Questions</span>
+                       <span id="generateText">
+                           @if(request('format') === 'flashcard')
+                               Generate Flashcards
+                           @else
+                               Generate Questions
+                           @endif
+                       </span>
                    </button>
                </div>
            </form>
        </div>
    </div>
 
-   <!-- Extracted Text Content -->
+   <!-- Extracted Text Content (collapsed by default) -->
    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
        <div class="mb-4 flex items-center justify-between">
            <h2 class="text-lg font-semibold text-gray-900">Extracted Text Content</h2>
-           <button id="toggleContent" class="text-sm text-cyan-600 hover:text-cyan-700 font-medium">
-               <span id="toggleText">Collapse</span>
-               <svg id="toggleIcon" class="w-4 h-4 inline ml-1 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+           <button id="toggleContent" class="text-sm text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600 hover:text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-700 font-medium">
+               <span id="toggleText">Expand</span>
+               <svg id="toggleIcon" class="w-4 h-4 inline ml-1 transform rotate-180 transition-transform" fill="currentColor" viewBox="0 0 20 20">
                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/>
                </svg>
            </button>
        </div>
 
-       <div id="extractedContent" class="prose max-w-none">
+       <div id="extractedContent" class="prose max-w-none" style="display: none;">
            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 max-h-96 overflow-y-auto">
                <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono leading-relaxed">{{ $document->extracted_text }}</pre>
            </div>
@@ -146,9 +185,9 @@
        <!-- Content Statistics -->
        <div class="mt-4 pt-4 border-t border-gray-100">
            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-               <div class="bg-cyan-50 rounded-lg p-3">
-                   <div class="text-lg font-bold text-cyan-600">{{ str_word_count($document->extracted_text) }}</div>
-                   <div class="text-xs text-cyan-700">Words</div>
+               <div class="bg-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-50 rounded-lg p-3">
+                   <div class="text-lg font-bold text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-600">{{ str_word_count($document->extracted_text) }}</div>
+                   <div class="text-xs text-{{ request('format') === 'flashcard' ? 'purple' : 'cyan' }}-700">Words</div>
                </div>
                <div class="bg-blue-50 rounded-lg p-3">
                    <div class="text-lg font-bold text-blue-600">{{ strlen($document->extracted_text) }}</div>
@@ -158,28 +197,32 @@
                    <div class="text-lg font-bold text-green-600">{{ substr_count($document->extracted_text, "\n") + 1 }}</div>
                    <div class="text-xs text-green-700">Lines</div>
                </div>
-               <div class="bg-purple-50 rounded-lg p-3">
-                   <div class="text-lg font-bold text-purple-600">{{ count(array_filter(explode('.', $document->extracted_text))) }}</div>
-                   <div class="text-xs text-purple-700">Sentences</div>
+               <div class="bg-gray-50 rounded-lg p-3">
+                   <div class="text-lg font-bold text-gray-600">{{ count(array_filter(explode('.', $document->extracted_text))) }}</div>
+                   <div class="text-xs text-gray-700">Sentences</div>
                </div>
            </div>
        </div>
    </div>
 
    <!-- Processing Info -->
-   <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+   <div class="mt-6 bg-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-50 border border-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-200 rounded-lg p-4">
        <div class="flex">
-           <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+           <svg class="w-5 h-5 text-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
            </svg>
            <div>
-               <h3 class="text-sm font-medium text-blue-800 mb-1">Ready for Processing</h3>
-               <p class="text-sm text-blue-700">
-                   Choose how many questions you want to generate from this text. Each question will include four answer options and a detailed explanation to help with learning.
+               <h3 class="text-sm font-medium text-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-800 mb-1">Ready for Processing</h3>
+               <p class="text-sm text-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-700">
+                   @if(request('format') === 'flashcard')
+                       Choose how many flashcards you want to generate from this text. Each flashcard will have a term/concept on the front and its definition/explanation on the back for effective studying.
+                   @else
+                       Choose how many questions you want to generate from this text. Each question will include four answer options and a detailed explanation to help with learning.
+                   @endif
                </p>
                <div class="mt-2">
-                   <p class="text-xs text-blue-600 font-medium">
-                       💡 Tip: More questions provide better coverage of your document content but cost more credits.
+                   <p class="text-xs text-{{ request('format') === 'flashcard' ? 'purple' : 'blue' }}-600 font-medium">
+                       💡 Tip: More {{ request('format') === 'flashcard' ? 'flashcards' : 'questions' }} provide better coverage of your document content but cost more credits.
                    </p>
                </div>
            </div>
@@ -189,7 +232,8 @@
 
 <script id="app-data" type="application/json">
 {
-   "userCredits": {{ auth()->user()->credits }}
+   "userCredits": {{ auth()->user()->credits }},
+   "format": "{{ request('format', 'mcq') }}"
 }
 </script>
 
@@ -197,6 +241,7 @@
 document.addEventListener('DOMContentLoaded', function() {
    const appData = JSON.parse(document.getElementById('app-data').textContent);
    const userCredits = appData.userCredits;
+   const format = appData.format;
    
    const questionOptions = document.querySelectorAll('.question-option');
    const creditAlert = document.getElementById('creditAlert');
@@ -209,10 +254,10 @@ document.addEventListener('DOMContentLoaded', function() {
    const toggleIcon = document.getElementById('toggleIcon');
    const extractedContent = document.getElementById('extractedContent');
 
-   let selectedCredits = 1; // Default
-   let isCollapsed = false;
+   let selectedCredits = 1;
+   let isCollapsed = true;
 
-   // Handle question option selection
+   // Handle option selection
    questionOptions.forEach(function(option) {
        option.addEventListener('click', function() {
            const count = this.getAttribute('data-count');
@@ -220,20 +265,21 @@ document.addEventListener('DOMContentLoaded', function() {
            
            // Clear previous selections
            questionOptions.forEach(opt => {
-               opt.classList.remove('border-cyan-500', 'bg-cyan-50');
+               opt.classList.remove('border-' + (format === 'flashcard' ? 'purple' : 'cyan') + '-500', 'bg-' + (format === 'flashcard' ? 'purple' : 'cyan') + '-50');
                opt.classList.add('border-gray-200');
            });
            
            // Select this option
            this.classList.remove('border-gray-200');
-           this.classList.add('border-cyan-500', 'bg-cyan-50');
+           this.classList.add('border-' + (format === 'flashcard' ? 'purple' : 'cyan') + '-500', 'bg-' + (format === 'flashcard' ? 'purple' : 'cyan') + '-50');
            
            // Update radio button
            document.getElementById('q' + count).checked = true;
            selectedCredits = credits;
            
            // Update button text
-           generateText.textContent = `Generate ${count} Questions (${credits} Credit${credits > 1 ? 's' : ''})`;
+           const itemType = format === 'flashcard' ? 'Flashcards' : 'Questions';
+           generateText.textContent = `Generate ${count} ${itemType} (${credits} Credit${credits > 1 ? 's' : ''})`;
            
            checkCredits();
        });
@@ -256,9 +302,10 @@ document.addEventListener('DOMContentLoaded', function() {
    // Form submission
    processForm.addEventListener('submit', function(e) {
        generateBtn.disabled = true;
-       generateText.textContent = 'Generating Questions...';
+       const itemType = format === 'flashcard' ? 'Flashcards' : 'Questions';
+       generateText.textContent = `Generating ${itemType}...`;
        
-       generateBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating Questions...';
+       generateBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating ' + itemType + '...';
    });
 
    // Toggle content

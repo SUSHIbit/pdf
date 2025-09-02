@@ -24,6 +24,7 @@ class Document extends Model
         'status',
         'extracted_text',
         'question_count',
+        'format',
     ];
 
     protected $casts = [
@@ -75,5 +76,23 @@ class Document extends Model
     public function getDisplayName(): string
     {
         return $this->title ?: $this->original_name;
+    }
+
+    public function getFormatDisplay(): string
+    {
+        return match($this->format) {
+            'mcq' => 'MCQ',
+            'flashcard' => 'Flashcards',
+            default => 'MCQ',
+        };
+    }
+
+    public function getItemsText(): string
+    {
+        return match($this->format) {
+            'mcq' => $this->question_count . ' questions',
+            'flashcard' => $this->question_count . ' flashcards',
+            default => $this->question_count . ' questions',
+        };
     }
 }

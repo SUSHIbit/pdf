@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload', [DocumentController::class, 'store'])->name('documents.store')->middleware('throttle:10,60');
     
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
+    Route::get('/documents/{document}/format', [DocumentController::class, 'format'])->name('documents.format');
     Route::get('/documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
     Route::post('/documents/{document}/process', [DocumentController::class, 'process'])->name('documents.process');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');

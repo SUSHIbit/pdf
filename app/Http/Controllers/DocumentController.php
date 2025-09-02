@@ -51,13 +51,14 @@ class DocumentController extends Controller
                 'file_size' => $file->getSize(),
                 'status' => 'uploaded',
                 'question_count' => 10, // Default
+                'format' => 'mcq', // Default
             ]);
 
             $this->extractTextFromDocument($document);
 
             return redirect()
-                ->route('documents.preview', $document)
-                ->with('success', 'Document uploaded successfully! Choose question count and review the content.');
+                ->route('documents.format', $document)
+                ->with('success', 'Document uploaded successfully! Choose your study format.');
 
         } catch (\Exception $e) {
             Log::error('Document upload failed: ' . $e->getMessage());
@@ -72,7 +73,7 @@ class DocumentController extends Controller
         }
     }
 
-    public function preview(Document $document)
+    public function format(Document $document)
     {
         if ($document->user_id !== auth()->id()) {
             abort(403);
@@ -84,7 +85,29 @@ class DocumentController extends Controller
                 ->with('error', 'No extracted text available for this document.');
         }
 
-        return view('documents.preview', compact('document'));
+        return view('documents.format', compact('document'));
+    }
+
+    public function preview(Document $document, Request $request)
+    {
+        if ($document->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (empty($document->extracted_text)) {
+            return redirect()
+                ->route('dashboard')
+                ->with('error', 'No extracted text available for this document.');
+        }
+
+        // Validate and store format
+        $format = $request->get('format', 'mcq');
+        if (!in_array($format, ['mcq', 'flashcard'])) {
+            $format = 'mcq';
+        }
+
+        return view('documents.preview', compact('document'))
+            ->with('format', $format);
     }
 
     public function process(Document $document, Request $request)
@@ -95,16 +118,18 @@ class DocumentController extends Controller
 
         $request->validate([
             'question_count' => 'required|integer|in:10,20,30',
+            'format' => 'required|string|in:mcq,flashcard',
         ]);
 
         $user = auth()->user();
         $questionCount = $request->input('question_count');
+        $format = $request->input('format');
         $creditCost = $this->getCreditCost($questionCount);
         
         if ($user->credits < $creditCost) {
             return redirect()
                 ->route('payment.packages')
-                ->with('error', "You need at least {$creditCost} credits to process this document with {$questionCount} questions.");
+                ->with('error', "You need at least {$creditCost} credits to process this document with {$questionCount} " . ($format === 'flashcard' ? 'flashcards' : 'questions') . ".");
         }
 
         if (empty($document->extracted_text)) {
@@ -114,34 +139,39 @@ class DocumentController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($user, $document, $creditCost, $questionCount) {
-                // Update document with selected question count
-                $document->update(['question_count' => $questionCount]);
+            DB::transaction(function () use ($user, $document, $creditCost, $questionCount, $format) {
+                // Update document with selected options
+                $document->update([
+                    'question_count' => $questionCount,
+                    'format' => $format
+                ]);
                 
                 // Deduct credits
                 User::where('id', $user->id)->decrement('credits', $creditCost);
 
+                $itemType = $format === 'flashcard' ? 'flashcards' : 'questions';
                 CreditTransaction::create([
                     'user_id' => $user->id,
                     'type' => 'usage',
                     'credits' => -$creditCost,
                     'amount' => null,
-                    'description' => "Document processing ({$questionCount} questions): {$document->original_name}",
+                    'description' => "Document processing ({$questionCount} {$itemType}): {$document->original_name}",
                 ]);
             });
 
             $this->processDocumentWithAI($document);
 
+            $itemType = $format === 'flashcard' ? 'flashcards' : 'questions';
             return redirect()
                 ->route('documents.show', $document)
-                ->with('success', 'Document processed successfully! Your questions are ready.');
+                ->with('success', "Document processed successfully! Your {$itemType} are ready.");
 
         } catch (\Exception $e) {
             Log::error('Document AI processing failed: ' . $e->getMessage());
             
             return redirect()
                 ->back()
-                ->with('error', 'Failed to generate questions. Please try again.');
+                ->with('error', 'Failed to generate content. Please try again.');
         }
     }
 
@@ -149,6 +179,10 @@ class DocumentController extends Controller
     {
         if ($document->user_id !== auth()->id()) {
             abort(403);
+        }
+
+        if ($document->format === 'flashcard') {
+            return view('documents.flashcards', compact('document'));
         }
 
         return view('documents.show', compact('document'));
@@ -222,9 +256,18 @@ class DocumentController extends Controller
         }
 
         if (!$document->questionSet) {
-            return redirect()->back()->with('error', 'No questions available for download.');
+            return redirect()->back()->with('error', 'No content available for download.');
         }
 
+        if ($document->format === 'flashcard') {
+            return $this->downloadFlashcards($document);
+        }
+
+        return $this->downloadMCQ($document);
+    }
+
+    private function downloadMCQ(Document $document)
+    {
         $content = "Multiple Choice Questions for: {$document->getDisplayName()}\n";
         $content .= "Questions: {$document->question_count}\n";
         $content .= "Generated on: " . $document->created_at->format('Y-m-d H:i:s') . "\n";
@@ -254,6 +297,34 @@ class DocumentController extends Controller
         return response($content)
             ->header('Content-Type', 'text/plain')
             ->header('Content-Disposition', 'attachment; filename="questions_' . $document->question_count . '_' . str_replace(' ', '_', $document->getDisplayName()) . '.txt"');
+    }
+
+    private function downloadFlashcards(Document $document)
+    {
+        $content = "Flashcards for: {$document->getDisplayName()}\n";
+        $content .= "Cards: {$document->question_count}\n";
+        $content .= "Generated on: " . $document->created_at->format('Y-m-d H:i:s') . "\n";
+        $content .= str_repeat("=", 60) . "\n\n";
+
+        foreach ($document->questionSet->questions_answers as $index => $card) {
+            $cardNumber = $index + 1;
+            
+            // Front of card
+            $content .= "CARD {$cardNumber} - FRONT\n";
+            $content .= str_repeat("-", 20) . "\n";
+            $content .= $card['front'] . "\n\n";
+            
+            // Back of card  
+            $content .= "CARD {$cardNumber} - BACK\n";
+            $content .= str_repeat("-", 20) . "\n";
+            $content .= $card['back'] . "\n";
+            
+            $content .= "\n" . str_repeat("=", 40) . "\n\n";
+        }
+
+        return response($content)
+            ->header('Content-Type', 'text/plain')
+            ->header('Content-Disposition', 'attachment; filename="flashcards_' . $document->question_count . '_' . str_replace(' ', '_', $document->getDisplayName()) . '.txt"');
     }
 
     private function getCreditCost(int $questionCount): int
@@ -318,10 +389,15 @@ class DocumentController extends Controller
             $document->update(['status' => 'processing']);
 
             $aiService = app(AIService::class);
-            $questionsAnswers = $aiService->generateQuestions($document->extracted_text, $document->question_count);
+            
+            if ($document->format === 'flashcard') {
+                $questionsAnswers = $aiService->generateFlashcards($document->extracted_text, $document->question_count);
+            } else {
+                $questionsAnswers = $aiService->generateQuestions($document->extracted_text, $document->question_count);
+            }
 
             if (empty($questionsAnswers)) {
-                throw new \Exception('No questions could be generated from the document');
+                throw new \Exception('No content could be generated from the document');
             }
 
             QuestionSet::create([
