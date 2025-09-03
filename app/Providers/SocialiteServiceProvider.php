@@ -15,14 +15,7 @@ class SocialiteServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Configure Guzzle HTTP client for local development
-        if ($this->app->environment('local')) {
-            $this->app->resolving(\GuzzleHttp\Client::class, function ($client, $app) {
-                return new \GuzzleHttp\Client([
-                    'verify' => false, // Disable SSL verification for local development
-                    'timeout' => 30,
-                ]);
-            });
-        }
+        // Configuration is now handled by CurlConfigurationProvider
+        // This provider now only registers Socialite
     }
 }
