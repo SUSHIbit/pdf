@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/PaymentController.php
 
 namespace App\Http\Controllers;
 
@@ -8,6 +7,7 @@ use App\Models\User;
 use App\Models\CreditTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -18,6 +18,9 @@ class PaymentController extends Controller
         $this->paymentService = $paymentService;
     }
 
+    /**
+     * Display credit packages
+     */
     public function packages()
     {
         $packages = [
@@ -29,6 +32,9 @@ class PaymentController extends Controller
         return view('payment.packages', compact('packages'));
     }
 
+    /**
+     * Create Stripe checkout session
+     */
     public function checkout(Request $request)
     {
         $request->validate([
@@ -44,27 +50,86 @@ class PaymentController extends Controller
         $credits = $request->credits;
         $amount = $packages[$credits];
 
-        $session = $this->paymentService->createCheckoutSession($credits, $amount);
+        try {
+            Log::info('Starting checkout process', [
+                'user_id' => auth()->id(),
+                'credits' => $credits,
+                'amount' => $amount
+            ]);
 
-        return redirect($session->url);
+            $session = $this->paymentService->createCheckoutSession($credits, $amount);
+
+            return redirect($session->url);
+
+        } catch (\Exception $e) {
+            Log::error('Checkout failed: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'credits' => $credits
+            ]);
+
+            return redirect()->route('payment.packages')
+                ->with('error', 'Unable to process payment. Please try again.');
+        }
     }
 
+    /**
+     * Handle successful payment
+     */
     public function success(Request $request)
     {
         $sessionId = $request->get('session_id');
         
         if (!$sessionId) {
-            return redirect()->route('dashboard')->with('error', 'Payment session not found.');
+            Log::warning('Payment success called without session ID');
+            return redirect()->route('payment.packages')
+                ->with('error', 'Payment session not found.');
         }
 
-        $session = $this->paymentService->getSession($sessionId);
-        
-        if ($session->payment_status === 'paid') {
+        try {
+            Log::info('Processing payment success', [
+                'session_id' => $sessionId,
+                'user_id' => auth()->id()
+            ]);
+
+            $session = $this->paymentService->getSession($sessionId);
+            
+            // Validate session belongs to current user
+            if (!$this->paymentService->validateUserSession($session)) {
+                Log::warning('Session validation failed', [
+                    'session_id' => $sessionId,
+                    'session_user_id' => $session->metadata->user_id ?? 'unknown',
+                    'current_user_id' => auth()->id()
+                ]);
+                
+                return redirect()->route('dashboard')
+                    ->with('error', 'Payment verification failed.');
+            }
+            
+            // Check payment status
+            if ($session->payment_status !== 'paid') {
+                Log::warning('Payment not completed', [
+                    'session_id' => $sessionId,
+                    'payment_status' => $session->payment_status
+                ]);
+                
+                return redirect()->route('payment.packages')
+                    ->with('error', 'Payment was not completed. Please try again.');
+            }
+
             $credits = (int) $session->metadata->credits;
             $userId = (int) $session->metadata->user_id;
             
-            // Use database transaction to add credits
-            DB::transaction(function () use ($credits, $userId, $sessionId) {
+            // Check if this session was already processed
+            $existingTransaction = CreditTransaction::where('stripe_session_id', $sessionId)->first();
+            if ($existingTransaction) {
+                Log::info('Session already processed', ['session_id' => $sessionId]);
+                
+                return redirect()->route('dashboard')
+                    ->with('success', "Welcome back! Your {$credits} credits are already in your account.");
+            }
+            
+            // Process the payment
+            DB::transaction(function () use ($credits, $userId, $sessionId, $session) {
                 // Add credits to user
                 User::where('id', $userId)->increment('credits', $credits);
                 
@@ -73,24 +138,40 @@ class PaymentController extends Controller
                     'user_id' => $userId,
                     'type' => 'purchase',
                     'credits' => $credits,
-                    'amount' => null,
+                    'amount' => $session->amount_total / 100, // Convert from cents
                     'stripe_session_id' => $sessionId,
                     'description' => "Credit purchase - {$credits} credits",
                 ]);
+                
+                Log::info('Credits added successfully', [
+                    'user_id' => $userId,
+                    'credits_added' => $credits,
+                    'session_id' => $sessionId
+                ]);
             });
 
-            return redirect()
-                ->route('dashboard')
-                ->with('success', "Payment successful! {$credits} credits added to your account.");
-        }
+            return redirect()->route('dashboard')
+                ->with('success', "Payment successful! {$credits} credits have been added to your account.");
 
-        return redirect()->route('dashboard')->with('error', 'Payment was not completed.');
+        } catch (\Exception $e) {
+            Log::error('Payment success processing failed: ' . $e->getMessage(), [
+                'session_id' => $sessionId,
+                'user_id' => auth()->id()
+            ]);
+            
+            return redirect()->route('dashboard')
+                ->with('error', 'There was an issue processing your payment. Please contact support if credits were not added.');
+        }
     }
 
+    /**
+     * Handle cancelled payment
+     */
     public function cancel()
     {
-        return redirect()
-            ->route('payment.packages')
-            ->with('error', 'Payment was cancelled.');
+        Log::info('Payment cancelled by user', ['user_id' => auth()->id()]);
+        
+        return redirect()->route('payment.packages')
+            ->with('error', 'Payment was cancelled. No charges were made.');
     }
 }

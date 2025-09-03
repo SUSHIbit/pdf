@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Stripe\Exception\ApiErrorException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -25,6 +26,19 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        // Handle Stripe API errors
+        $this->renderable(function (ApiErrorException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Payment processing error',
+                    'message' => 'Unable to process payment. Please try again.'
+                ], 422);
+            }
+
+            return redirect()->route('payment.packages')
+                ->with('error', 'Payment processing error. Please try again.');
         });
     }
 }
