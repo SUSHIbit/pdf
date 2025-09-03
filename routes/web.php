@@ -5,6 +5,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -28,6 +29,10 @@ Route::post('/landing-upload', function (Request $request) {
     
     return redirect()->route('login')->with('info', 'Please log in to upload documents');
 })->name('landing.upload');
+
+// Google OAuth Routes
+Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
 
 Route::middleware('auth')->group(function () {
     // Dashboard
