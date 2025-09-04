@@ -100,6 +100,38 @@
                         @endif
                     </div>
 
+                    <!-- Phone Field -->
+                    <div class="space-y-2">
+                        <label for="phone" class="block text-sm font-medium text-text-primary dark:text-text-dark-primary transition-colors">
+                            Phone Number <span class="text-text-tertiary dark:text-text-dark-tertiary text-xs">(Optional)</span>
+                        </label>
+                        <div class="relative">
+                            <input id="phone" 
+                                   name="phone" 
+                                   type="tel" 
+                                   value="{{ old('phone', $user->phone ? $user->formatted_phone : '') }}"
+                                   autocomplete="tel"
+                                   class="block w-full px-4 py-3 bg-surface dark:bg-surface-dark border border-border dark:border-border-dark rounded-xl text-text-primary dark:text-text-dark-primary placeholder-text-tertiary dark:placeholder-text-dark-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent transition-all duration-200 @error('phone') border-error-500 dark:border-error-400 @enderror"
+                                   placeholder="e.g., +60123456789 or 0123456789">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <svg class="h-5 w-5 text-text-tertiary dark:text-text-dark-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        @error('phone')
+                            <p class="text-sm text-error-600 dark:text-error-400 flex items-center mt-2">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        <p class="text-xs text-text-tertiary dark:text-text-dark-tertiary">
+                            Enter your Malaysian phone number. We'll use this for payment notifications.
+                        </p>
+                    </div>
+
                     <div class="flex items-center justify-end space-x-3 pt-4">
                         <button type="submit" 
                                 class="px-6 py-3 bg-primary-600 dark:bg-primary-700 hover:bg-primary-700 dark:hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105">
@@ -217,60 +249,58 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
-                                <svg x-show="showConfirmPassword" class="h-5 w-5 text-text-tertiary dark:text-text-dark-tertiary hover:text-text-secondary dark:hover:text-text-dark-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-                                </svg>
-                            </button>
+                                <svg x-show="showConfirmPassword" class="h-5 w-5 text-text-tertiary dark:text-text-dark-tertiary hover:text-text-dark-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+</svg>
+</button>
+</div>
+@error('password_confirmation', 'updatePassword')
+<p class="text-sm text-error-600 dark:text-error-400 flex items-center mt-2">
+<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+</svg>
+{{ $message }}
+</p>
+@enderror
+</div>
+                <div class="flex items-center justify-end space-x-3 pt-4">
+                    <button type="submit" 
+                            class="px-6 py-3 bg-primary-600 dark:bg-primary-700 hover:bg-primary-700 dark:hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105">
+                        Update Password
+                    </button>
+
+                    @if (session('status') === 'password-updated')
+                        <div class="inline-flex items-center px-3 py-1 bg-success-100 dark:bg-success-900/30 border border-success-200 dark:border-success-800 rounded-full animate-fade-in">
+                            <svg class="w-4 h-4 text-success-600 dark:text-success-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                            <span class="text-sm font-medium text-success-800 dark:text-success-300">Updated!</span>
                         </div>
-                        @error('password_confirmation', 'updatePassword')
-                            <p class="text-sm text-error-600 dark:text-error-400 flex items-center mt-2">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
-                                </svg>
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <div class="flex items-center justify-end space-x-3 pt-4">
-                        <button type="submit" 
-                                class="px-6 py-3 bg-primary-600 dark:bg-primary-700 hover:bg-primary-700 dark:hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105">
-                            Update Password
-                        </button>
-
-                        @if (session('status') === 'password-updated')
-                            <div class="inline-flex items-center px-3 py-1 bg-success-100 dark:bg-success-900/30 border border-success-200 dark:border-success-800 rounded-full animate-fade-in">
-                                <svg class="w-4 h-4 text-success-600 dark:text-success-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                                </svg>
-                                <span class="text-sm font-medium text-success-800 dark:text-success-300">Updated!</span>
-                            </div>
-                        @endif
-                    </div>
-                </form>
-            </div>
-
-            <!-- Delete Account Section -->
-            <div class="bg-surface/80 dark:bg-surface-dark/80 backdrop-blur-sm rounded-2xl shadow-sm border border-error-200 dark:border-error-800 p-6 transition-colors">
-                <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-error-600 dark:text-error-400 mb-2 transition-colors">
-                        Delete Account
-                    </h2>
-                    <p class="text-sm text-text-secondary dark:text-text-dark-secondary transition-colors">
-                        Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.
-                    </p>
+                    @endif
                 </div>
+            </form>
+        </div>
 
-                <button x-data="" 
-                        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-                        class="px-6 py-3 bg-error-600 hover:bg-error-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105">
+        <!-- Delete Account Section -->
+        <div class="bg-surface/80 dark:bg-surface-dark/80 backdrop-blur-sm rounded-2xl shadow-sm border border-error-200 dark:border-error-800 p-6 transition-colors">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-error-600 dark:text-error-400 mb-2 transition-colors">
                     Delete Account
-                </button>
+                </h2>
+                <p class="text-sm text-text-secondary dark:text-text-dark-secondary transition-colors">
+                    Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.
+                </p>
             </div>
+
+            <button x-data="" 
+                    x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
+                    class="px-6 py-3 bg-error-600 hover:bg-error-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105">
+                Delete Account
+            </button>
         </div>
     </div>
 </div>
-
+</div>
 <!-- Delete Account Modal -->
 <div x-data="{ show: false }" 
      x-on:open-modal.window="$event.detail == 'confirm-user-deletion' ? show = true : null"
@@ -291,45 +321,44 @@
                     <h3 class="text-lg font-semibold text-text-primary dark:text-text-dark-primary transition-colors">Delete Account</h3>
                 </div>
             </div>
+        <p class="text-text-secondary dark:text-text-dark-secondary mb-6 transition-colors">
+            Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.
+        </p>
 
-            <p class="text-text-secondary dark:text-text-dark-secondary mb-6 transition-colors">
-                Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.
-            </p>
+        <form method="post" action="{{ route('profile.destroy') }}">
+            @csrf
+            @method('delete')
 
-            <form method="post" action="{{ route('profile.destroy') }}">
-                @csrf
-                @method('delete')
+            <div class="mb-6">
+                <label for="password" class="sr-only">Password</label>
+                <input id="password"
+                       name="password"
+                       type="password"
+                       placeholder="Enter your password"
+                       class="block w-full px-4 py-3 bg-surface dark:bg-surface-dark border border-border dark:border-border-dark rounded-xl text-text-primary dark:text-text-dark-primary placeholder-text-tertiary dark:placeholder-text-dark-tertiary focus:outline-none focus:ring-2 focus:ring-error-500 dark:focus:ring-error-400 focus:border-transparent transition-all duration-200 @error('password', 'userDeletion') border-error-500 dark:border-error-400 @enderror">
+                @error('password', 'userDeletion')
+                    <p class="text-sm text-error-600 dark:text-error-400 flex items-center mt-2">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                        </svg>
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-                <div class="mb-6">
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password"
-                           name="password"
-                           type="password"
-                           placeholder="Enter your password"
-                           class="block w-full px-4 py-3 bg-surface dark:bg-surface-dark border border-border dark:border-border-dark rounded-xl text-text-primary dark:text-text-dark-primary placeholder-text-tertiary dark:placeholder-text-dark-tertiary focus:outline-none focus:ring-2 focus:ring-error-500 dark:focus:ring-error-400 focus:border-transparent transition-all duration-200 @error('password', 'userDeletion') border-error-500 dark:border-error-400 @enderror">
-                    @error('password', 'userDeletion')
-                        <p class="text-sm text-error-600 dark:text-error-400 flex items-center mt-2">
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
-                            </svg>
-                            {{ $message }}
-                        </p>
-                    @enderror
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                    <button type="button" 
-                            x-on:click="show = false"
-                            class="px-4 py-2 text-text-secondary dark:text-text-dark-secondary border border-border dark:border-border-dark rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                            class="px-4 py-2 bg-error-600 hover:bg-error-700 text-white rounded-xl transition-colors">
-                        Delete Account
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" 
+                        x-on:click="show = false"
+                        class="px-4 py-2 text-text-secondary dark:text-text-dark-secondary border border-border dark:border-border-dark rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-error-600 hover:bg-error-700 text-white rounded-xl transition-colors">
+                    Delete Account
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 </div>
 @endsection

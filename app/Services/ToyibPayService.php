@@ -34,6 +34,18 @@ class ToyibPayService
 
             // Use user's phone or provide a default Malaysian number
             $phoneNumber = $user->phone ?? '60123456789';
+            
+            // Ensure phone number has proper format (remove + and ensure it starts with 60)
+            $phoneNumber = ltrim($phoneNumber, '+');
+            if (!str_starts_with($phoneNumber, '60')) {
+                // If it starts with 0, replace with 60
+                if (str_starts_with($phoneNumber, '0')) {
+                    $phoneNumber = '60' . substr($phoneNumber, 1);
+                } else {
+                    // Otherwise assume it's a local number and add 60
+                    $phoneNumber = '60' . $phoneNumber;
+                }
+            }
 
             $billData = [
                 'userSecretKey' => $this->secretKey,
@@ -48,7 +60,7 @@ class ToyibPayService
                 'billExternalReferenceNo' => 'AIDOC_' . $userId . '_' . time(),
                 'billTo' => $user->name,
                 'billEmail' => $user->email,
-                'billPhone' => $phoneNumber, // Now properly provided
+                'billPhone' => $phoneNumber,
                 'billSplitPayment' => 0,
                 'billSplitPaymentArgs' => '',
                 'billPaymentChannel' => '0',

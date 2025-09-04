@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\CreditTransaction;
 use App\Providers\RouteServiceProvider;
+use App\Rules\MalaysianPhoneNumber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['nullable', 'string', 'max:20', new MalaysianPhoneNumber],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -49,9 +51,16 @@ class RegisteredUserController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
+            // Normalize phone number
+            $phone = null;
+            if ($request->phone) {
+                $phone = $this->normalizePhoneNumber($request->phone);
+            }
+
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
+                'phone' => $phone,
                 'password' => Hash::make($request->password),
                 'credits' => 5,
             ]);
@@ -90,5 +99,30 @@ class RegisteredUserController extends Controller
 
         return redirect(RouteServiceProvider::HOME)
             ->with('success', 'Welcome! Your account has been created with 5 free credits.');
+    }
+
+    /**
+     * Normalize Malaysian phone number to international format
+     */
+    private function normalizePhoneNumber(string $phone): string
+    {
+        // Remove all non-digit characters except +
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+        
+        // Remove + sign temporarily
+        $phone = ltrim($phone, '+');
+        
+        // If starts with 60, it's already in international format
+        if (substr($phone, 0, 2) === '60') {
+            return $phone;
+        }
+        
+        // If starts with 0, replace with 60
+        if (substr($phone, 0, 1) === '0') {
+            return '60' . substr($phone, 1);
+        }
+        
+        // Otherwise, assume it's a local number and add 60
+        return '60' . $phone;
     }
 }

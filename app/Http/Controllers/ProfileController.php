@@ -26,7 +26,14 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $updateData = $request->validated();
+        
+        // Normalize phone number if provided
+        if (!empty($updateData['phone'])) {
+            $updateData['phone'] = $this->normalizePhoneNumber($updateData['phone']);
+        }
+
+        $request->user()->fill($updateData);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -56,5 +63,30 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Normalize Malaysian phone number to international format
+     */
+    private function normalizePhoneNumber(string $phone): string
+    {
+        // Remove all non-digit characters except +
+        $phone = preg_replace('/[^\d+]/', '', $phone);
+        
+        // Remove + sign temporarily
+        $phone = ltrim($phone, '+');
+        
+        // If starts with 60, it's already in international format
+        if (substr($phone, 0, 2) === '60') {
+            return $phone;
+        }
+        
+        // If starts with 0, replace with 60
+        if (substr($phone, 0, 1) === '0') {
+            return '60' . substr($phone, 1);
+        }
+        
+        // Otherwise, assume it's a local number and add 60
+        return '60' . $phone;
     }
 }
