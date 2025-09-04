@@ -87,9 +87,6 @@
                     <a href="{{ route('dashboard') }}" class="text-base font-medium text-text-primary dark:text-text-dark-primary hover:text-text-secondary dark:hover:text-text-dark-secondary transition-colors px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-primary-100 dark:bg-primary-800 rounded-lg' : '' }}">
                         Dashboard
                     </a>
-                    <a href="{{ route('documents.upload') }}" class="text-base font-medium text-text-primary dark:text-text-dark-primary hover:text-text-secondary dark:hover:text-text-dark-secondary transition-colors px-3 py-2 {{ request()->routeIs('documents.upload') ? 'bg-primary-100 dark:bg-primary-800 rounded-lg' : '' }}">
-                        Upload
-                    </a>
                     <a href="{{ route('payment.packages') }}" class="text-base font-medium text-text-primary dark:text-text-dark-primary hover:text-text-secondary dark:hover:text-text-dark-secondary transition-colors px-3 py-2 {{ request()->routeIs('payment.*') ? 'bg-primary-100 dark:bg-primary-800 rounded-lg' : '' }}">
                         Buy Credits
                     </a>
@@ -198,14 +195,6 @@
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L9 5.414V17a1 1 0 102 0V5.414l5.293 5.293a1 1 0 001.414-1.414l-7-7z"/>
                         </svg>
                         Dashboard
-                    </a>
-                    <a href="{{ route('documents.upload') }}" 
-                       @click="closeMobileMenu()"
-                       class="block px-4 py-3 text-base font-medium text-text-primary dark:text-text-dark-primary hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors {{ request()->routeIs('documents.upload') ? 'bg-primary-100 dark:bg-primary-800' : '' }}">
-                        <svg class="w-5 h-5 inline mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/>
-                        </svg>
-                        Upload Document
                     </a>
                     <a href="{{ route('payment.packages') }}" 
                        @click="closeMobileMenu()"
