@@ -35,13 +35,21 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
+    // 'toyyibpay' => [
+    //     'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+    //     'secret_key' => env('TOYYIBPAY_SECRET_KEY'),
+    //     'sandbox' => env('TOYYIBPAY_SANDBOX', false),
+    //     'base_url' => env('TOYYIBPAY_SANDBOX', false) 
+    //         ? 'https://dev.toyyibpay.com' 
+    //         : 'https://toyyibpay.com',
+    // ],
+    
+    // Add ToyibPay configuration
     'toyyibpay' => [
         'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
         'secret_key' => env('TOYYIBPAY_SECRET_KEY'),
-        'sandbox' => env('TOYYIBPAY_SANDBOX', false),
-        'base_url' => env('TOYYIBPAY_SANDBOX', false) 
-            ? 'https://dev.toyyibpay.com' 
-            : 'https://toyyibpay.com',
+        'base_url' => env('TOYYIBPAY_BASE_URL', 'https://dev.toyyibpay.com'),
+        'sandbox' => env('TOYYIBPAY_SANDBOX', true),
     ],
 
     'google' => [

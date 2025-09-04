@@ -166,7 +166,7 @@ class PaymentController extends Controller
             ]);
 
             return redirect()->route('payment.packages')
-                ->with('error', 'Unable to process payment. Please try again. Error: ' . $e->getMessage());
+                ->with('error', 'Unable to process payment. Please try again. Error details: ' . $e->getMessage());
         }
     }
 

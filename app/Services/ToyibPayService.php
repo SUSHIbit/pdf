@@ -30,6 +30,8 @@ class ToyibPayService
                 'credits' => $credits,
                 'amount' => $amount,
                 'user_id' => $userId,
+                'category_code' => $this->categoryCode,
+                'base_url' => $this->baseUrl,
             ]);
 
             // Use user's phone or provide a default Malaysian number
@@ -68,32 +70,100 @@ class ToyibPayService
                 'billChargeToCustomer' => 1,
             ];
 
+            Log::info('ToyibPay bill data being sent', [
+                'bill_data' => $billData,
+                'url' => $this->baseUrl . '/index.php/api/createBill'
+            ]);
+
             $response = Http::asForm()
                 ->timeout(30)
                 ->post($this->baseUrl . '/index.php/api/createBill', $billData);
 
+            Log::info('ToyibPay API response received', [
+                'status_code' => $response->status(),
+                'headers' => $response->headers(),
+                'body' => $response->body(),
+                'successful' => $response->successful()
+            ]);
+
             if (!$response->successful()) {
-                throw new \Exception('ToyibPay request failed: ' . $response->body());
+                Log::error('ToyibPay HTTP request failed', [
+                    'status_code' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('ToyibPay request failed with status ' . $response->status() . ': ' . $response->body());
             }
 
             $responseData = $response->json();
+            
+            Log::info('ToyibPay parsed response', [
+                'response_data' => $responseData,
+                'is_array' => is_array($responseData),
+                'count' => is_array($responseData) ? count($responseData) : 'not_array'
+            ]);
 
-            if (isset($responseData[0]['status']) && $responseData[0]['status'] === 'error') {
-                throw new \Exception('ToyibPay error: ' . ($responseData[0]['msg'] ?? 'Unknown error'));
+            // Check if response is valid
+            if (!is_array($responseData) || empty($responseData)) {
+                throw new \Exception('Invalid response format from ToyibPay: ' . json_encode($responseData));
             }
 
-            if (!isset($responseData[0]['BillCode'])) {
-                throw new \Exception('No bill code returned from ToyibPay');
+            $firstResponse = $responseData[0] ?? null;
+            
+            if (!$firstResponse) {
+                throw new \Exception('Empty response array from ToyibPay');
             }
 
-            return [
-                'bill_code' => $responseData[0]['BillCode'],
-                'bill_url' => $this->baseUrl . '/' . $responseData[0]['BillCode'],
+            Log::info('ToyibPay first response item', [
+                'first_response' => $firstResponse
+            ]);
+
+            // Check for error status
+            if (isset($firstResponse['status']) && $firstResponse['status'] === 'error') {
+                $errorMsg = $firstResponse['msg'] ?? 'Unknown error from ToyibPay';
+                Log::error('ToyibPay returned error status', [
+                    'error_msg' => $errorMsg,
+                    'full_response' => $firstResponse
+                ]);
+                throw new \Exception('ToyibPay error: ' . $errorMsg);
+            }
+
+            // Check for BillCode - try different possible field names
+            $billCode = null;
+            $possibleBillCodeFields = ['BillCode', 'billCode', 'bill_code', 'billcode'];
+            
+            foreach ($possibleBillCodeFields as $field) {
+                if (isset($firstResponse[$field]) && !empty($firstResponse[$field])) {
+                    $billCode = $firstResponse[$field];
+                    Log::info("Found bill code in field: {$field}", ['bill_code' => $billCode]);
+                    break;
+                }
+            }
+
+            if (!$billCode) {
+                Log::error('No bill code found in ToyibPay response', [
+                    'available_fields' => array_keys($firstResponse),
+                    'full_response' => $firstResponse
+                ]);
+                throw new \Exception('No bill code returned from ToyibPay. Available fields: ' . implode(', ', array_keys($firstResponse)));
+            }
+
+            $result = [
+                'bill_code' => $billCode,
+                'bill_url' => $this->baseUrl . '/' . $billCode,
                 'bill_external_ref' => $billData['billExternalReferenceNo']
             ];
 
+            Log::info('ToyibPay bill created successfully', $result);
+
+            return $result;
+
         } catch (\Exception $e) {
-            Log::error('ToyibPay bill creation failed: ' . $e->getMessage());
+            Log::error('ToyibPay bill creation failed: ' . $e->getMessage(), [
+                'exception_trace' => $e->getTraceAsString(),
+                'user_id' => $userId,
+                'credits' => $credits,
+                'amount' => $amount
+            ]);
             throw new \Exception('Payment system error: ' . $e->getMessage());
         }
     }
