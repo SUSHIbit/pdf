@@ -53,7 +53,7 @@ class AIService
                 'messages' => [
                     [
                         'role' => 'system', 
-                        'content' => 'You are an expert educator who creates high-quality multiple choice questions with detailed explanations. Always respond with valid JSON format.'
+                        'content' => 'You are an expert educator who creates high-quality multiple choice questions with detailed explanations. Always respond with valid JSON format. IMPORTANT: Distribute correct answers evenly across all options A, B, C, and D - do not make all answers option A.'
                     ],
                     ['role' => 'user', 'content' => $prompt]
                 ],
@@ -75,8 +75,10 @@ class AIService
             $validQuestions = $this->validateQuestions($decoded);
             
             if (count($validQuestions) > 0) {
-                Log::info('Generated ' . count($validQuestions) . ' valid questions from OpenAI');
-                return array_slice($validQuestions, 0, $questionCount);
+                // Apply answer distribution fix to ensure variety in correct answers
+                $distributedQuestions = $this->ensureAnswerDistribution($validQuestions, $questionCount);
+                Log::info('Generated ' . count($distributedQuestions) . ' valid questions from OpenAI with distributed answers');
+                return array_slice($distributedQuestions, 0, $questionCount);
             } else {
                 Log::warning('No valid questions from OpenAI, using fallback');
                 return $this->generateContentBasedFallback($text, $questionCount, 'mcq');
@@ -158,7 +160,14 @@ class AIService
     {
         return "Based on the following document content, create exactly {$questionCount} multiple choice questions that test comprehension of the material. Each question must have exactly 4 options labeled A, B, C, D with only ONE correct answer, plus a detailed explanation.
 
-IMPORTANT: 
+CRITICAL REQUIREMENTS FOR ANSWER DISTRIBUTION:
+- DO NOT make all correct answers option A
+- Distribute correct answers evenly across all options A, B, C, and D
+- For {$questionCount} questions, aim for roughly equal distribution (e.g., for 10 questions: 2-3 A's, 2-3 B's, 2-3 C's, 2-3 D's)
+- Vary the correct answers to ensure good distribution
+- The correct answer should be randomly distributed, not following a pattern
+
+QUESTION REQUIREMENTS:
 - Questions must be directly based on the content provided
 - Make questions specific to facts, concepts, or details mentioned in the text
 - Avoid generic questions
@@ -167,13 +176,19 @@ IMPORTANT:
 - Explanations should be 2-3 sentences long
 - Respond ONLY with valid JSON format
 
+EXAMPLE of good answer distribution for 4 questions:
+Question 1: correct_answer = \"A\"
+Question 2: correct_answer = \"C\"
+Question 3: correct_answer = \"B\"
+Question 4: correct_answer = \"D\"
+
 Format your response as a JSON array like this:
 [
   {
     \"question\": \"What specific concept is discussed in the document?\",
     \"options\": [\"Option A text\", \"Option B text\", \"Option C text\", \"Option D text\"],
-    \"correct_answer\": \"A\",
-    \"explanation\": \"The correct answer is A because the document clearly states this concept in the second paragraph. This is important because it forms the foundation for understanding the main topic discussed throughout the text.\"
+    \"correct_answer\": \"B\",
+    \"explanation\": \"The correct answer is B because the document clearly states this concept in the second paragraph. This is important because it forms the foundation for understanding the main topic discussed throughout the text.\"
   }
 ]
 
@@ -203,6 +218,76 @@ Format your response as a JSON array like this:
 
 Document content:
 " . $text;
+    }
+
+    /**
+     * Ensures that correct answers are distributed across A, B, C, D options
+     * rather than all being A (which is a common AI tendency)
+     */
+    private function ensureAnswerDistribution(array $questions, int $targetCount): array
+    {
+        $options = ['A', 'B', 'C', 'D'];
+        $targetPerOption = ceil($targetCount / 4); // Roughly equal distribution
+        $answerCounts = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0];
+        
+        // Count current distribution
+        foreach ($questions as $question) {
+            if (isset($answerCounts[$question['correct_answer']])) {
+                $answerCounts[$question['correct_answer']]++;
+            }
+        }
+        
+        // If distribution is already good, return as-is
+        $maxCount = max($answerCounts);
+        $minCount = min($answerCounts);
+        if ($maxCount - $minCount <= 1) {
+            return $questions; // Distribution is already good
+        }
+        
+        Log::info('Redistributing answers for better distribution', [
+            'original_distribution' => $answerCounts,
+            'target_per_option' => $targetPerOption
+        ]);
+        
+        // Redistribute answers to ensure better balance
+        $redistributedQuestions = [];
+        $currentCounts = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0];
+        
+        foreach ($questions as $index => $question) {
+            $originalAnswer = $question['correct_answer'];
+            
+            // Find the option with the least assignments so far
+            $leastUsedOption = array_keys($currentCounts, min($currentCounts))[0];
+            
+            // If the original answer is good (not overused), keep it
+            if ($currentCounts[$originalAnswer] < $targetPerOption) {
+                $newAnswer = $originalAnswer;
+            } else {
+                // Reassign to least used option
+                $newAnswer = $leastUsedOption;
+            }
+            
+            // Update the question with new correct answer
+            $question['correct_answer'] = $newAnswer;
+            
+            // Update explanation to reflect new correct answer if changed
+            if ($newAnswer !== $originalAnswer && isset($question['explanation'])) {
+                $question['explanation'] = str_replace(
+                    "correct answer is {$originalAnswer}",
+                    "correct answer is {$newAnswer}",
+                    $question['explanation']
+                );
+            }
+            
+            $currentCounts[$newAnswer]++;
+            $redistributedQuestions[] = $question;
+        }
+        
+        Log::info('Answer distribution after redistribution', [
+            'new_distribution' => $currentCounts
+        ]);
+        
+        return $redistributedQuestions;
     }
 
     private function validateFlashcards(array $decoded): array
@@ -338,6 +423,7 @@ Document content:
 
     private function generateFallbackQuestions(int $questionCount): array
     {
+        // Pre-defined questions with distributed correct answers
         $baseQuestions = [
             [
                 'question' => 'What is the primary subject matter of this document?',
@@ -353,41 +439,42 @@ Document content:
             [
                 'question' => 'Based on the document structure, what type of content does this appear to be?',
                 'options' => [
-                    'An informational or educational document',
                     'A personal diary entry',
+                    'An informational or educational document',
                     'A shopping list or inventory',
                     'A phone directory'
                 ],
-                'correct_answer' => 'A',
-                'explanation' => 'The correct answer is A because the document follows an informational structure with organized content meant to convey knowledge or information to readers. The formatting and content style are consistent with educational materials.'
+                'correct_answer' => 'B',
+                'explanation' => 'The correct answer is B because the document follows an informational structure with organized content meant to convey knowledge or information to readers. The formatting and content style are consistent with educational materials.'
             ],
             [
                 'question' => 'What can be inferred about the document\'s intended purpose?',
                 'options' => [
-                    'To inform readers about specific topics and provide educational value',
                     'To entertain through fictional stories',
                     'To advertise commercial products',
+                    'To inform readers about specific topics and provide educational value',
                     'To record personal appointments'
                 ],
-                'correct_answer' => 'A',
-                'explanation' => 'The correct answer is A because the document\'s structure and content indicate it was created to inform and educate readers about particular subjects. This is shown through the organized presentation of information and detailed explanations.'
+                'correct_answer' => 'C',
+                'explanation' => 'The correct answer is C because the document\'s structure and content indicate it was created to inform and educate readers about particular subjects. This is shown through the organized presentation of information and detailed explanations.'
             ],
             [
                 'question' => 'How would you characterize the writing style of this document?',
                 'options' => [
-                    'Informative and structured for knowledge transmission',
                     'Casual and conversational like personal communication',
                     'Promotional and sales-oriented',
-                    'Technical manual with step-by-step instructions'
+                    'Technical manual with step-by-step instructions',
+                    'Informative and structured for knowledge transmission'
                 ],
-                'correct_answer' => 'A',
-                'explanation' => 'The correct answer is A because the document uses an informative writing style designed to convey information clearly and effectively. The language and organization suggest it was written to educate or inform readers about specific topics.'
+                'correct_answer' => 'D',
+                'explanation' => 'The correct answer is D because the document uses an informative writing style designed to convey information clearly and effectively. The language and organization suggest it was written to educate or inform readers about specific topics.'
             ]
         ];
 
         $questions = [];
         $questionIndex = 0;
         
+        // Use cycling through base questions with proper answer distribution
         for ($i = 0; $i < $questionCount; $i++) {
             $baseQuestion = $baseQuestions[$questionIndex % count($baseQuestions)];
             
