@@ -15,9 +15,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone', // Add this
         'password',
         'credits',
         'google_id',
+        'trial_pack_used',
     ];
 
     protected $hidden = [
@@ -29,6 +31,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'credits' => 'integer',
+        'trial_pack_used' => 'boolean', // Add this
     ];
 
     public function documents(): HasMany

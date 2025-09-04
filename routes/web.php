@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ToyibPayCallbackController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
@@ -60,7 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/folders/{folder}', [FolderController::class, 'destroy'])->name('folders.destroy');
     Route::post('/move-document', [FolderController::class, 'moveDocument'])->name('folders.move-document');
     
-    // Payments
+    // ToyibPay Payments
     Route::get('/credits', [PaymentController::class, 'packages'])->name('payment.packages');
     Route::post('/checkout', [PaymentController::class, 'checkout'])->name('payment.checkout');
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
@@ -72,7 +73,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::post('/stripe/webhook', [App\Http\Controllers\StripeWebhookController::class, 'handle'])
-    ->name('stripe.webhook');
+// ToyibPay Callback (outside auth middleware)
+Route::post('/toyyibpay/callback', [ToyibPayCallbackController::class, 'handle'])
+    ->name('toyyibpay.callback');
 
 require __DIR__.'/auth.php';

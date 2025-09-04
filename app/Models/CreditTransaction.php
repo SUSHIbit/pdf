@@ -1,5 +1,4 @@
 <?php
-// app/Models/CreditTransaction.php
 
 namespace App\Models;
 
@@ -16,7 +15,7 @@ class CreditTransaction extends Model
         'type',
         'credits',
         'amount',
-        'stripe_session_id',
+        'toyyibpay_bill_code', // Changed from stripe_session_id
         'description',
     ];
 
@@ -29,33 +28,5 @@ class CreditTransaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-}
-
-// app/Models/QuestionSet.php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class QuestionSet extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'document_id',
-        'questions_answers',
-    ];
-
-    protected $casts = [
-        'questions_answers' => 'array',
-        'document_id' => 'integer',
-    ];
-
-    public function document(): BelongsTo
-    {
-        return $this->belongsTo(Document::class);
     }
 }

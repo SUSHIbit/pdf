@@ -35,10 +35,13 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
-    'stripe' => [
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    'toyyibpay' => [
+        'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+        'secret_key' => env('TOYYIBPAY_SECRET_KEY'),
+        'sandbox' => env('TOYYIBPAY_SANDBOX', false),
+        'base_url' => env('TOYYIBPAY_SANDBOX', false) 
+            ? 'https://dev.toyyibpay.com' 
+            : 'https://toyyibpay.com',
     ],
 
     'google' => [
