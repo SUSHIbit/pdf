@@ -75,8 +75,9 @@ class ToyibPayService
                 'url' => $this->baseUrl . '/index.php/api/createBill'
             ]);
 
-            $response = Http::asForm()
-                ->timeout(30)
+            $response = Http::timeout(30)
+                ->retry(3, 1000)
+                ->asForm()
                 ->post($this->baseUrl . '/index.php/api/createBill', $billData);
 
             Log::info('ToyibPay API response received', [
@@ -176,14 +177,26 @@ class ToyibPayService
         try {
             Log::info('Getting ToyibPay bill status', ['bill_code' => $billCode]);
 
-            $response = Http::asForm()
-                ->timeout(30)
+            $response = Http::timeout(30)
+                ->retry(3, 1000)
+                ->asForm()
                 ->post($this->baseUrl . '/index.php/api/getBill', [
                     'billCode' => $billCode
                 ]);
 
+            Log::info('ToyibPay getBill response', [
+                'status_code' => $response->status(),
+                'body' => $response->body(),
+                'successful' => $response->successful()
+            ]);
+
             if (!$response->successful()) {
-                throw new \Exception('Failed to get bill status');
+                Log::error('ToyibPay getBill HTTP request failed', [
+                    'status_code' => $response->status(),
+                    'body' => $response->body(),
+                    'bill_code' => $billCode
+                ]);
+                throw new \Exception('Failed to get bill status from ToyibPay API');
             }
 
             $responseData = $response->json();
@@ -197,7 +210,8 @@ class ToyibPayService
 
         } catch (\Exception $e) {
             Log::error('Failed to get ToyibPay bill status: ' . $e->getMessage(), [
-                'bill_code' => $billCode
+                'bill_code' => $billCode,
+                'error_trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }
