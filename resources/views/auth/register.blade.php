@@ -3,12 +3,14 @@
 @section('content')
     <!-- Page Title -->
     <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-text-primary dark:text-text-dark-primary mb-2 transition-colors">
-            Create Account
-        </h1>
-        <p class="text-text-secondary dark:text-text-dark-secondary text-sm transition-colors">
-            Get started with 5 free credits
-        </p>
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-text-primary dark:text-text-dark-primary mb-2 transition-colors">
+                Join Wizardry
+            </h1>
+            <p class="text-text-secondary dark:text-text-dark-secondary text-sm transition-colors">
+                Get started with 5 free credits
+            </p>
+        </div>
         <!-- Credit Indicator -->
         <div class="mt-3 inline-flex items-center px-3 py-1 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-full">
             <svg class="w-4 h-4 text-success-600 dark:text-success-400 mr-2" fill="currentColor" viewBox="0 0 20 20">

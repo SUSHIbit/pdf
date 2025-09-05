@@ -4,7 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'AI Document Q&A') }}</title>
+    <title>{{ config('app.name', 'Wizardry') }}</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <meta name="theme-color" content="#3B82F6">
+    
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -63,7 +72,15 @@
             <nav class="flex items-center justify-between p-4 lg:px-8 max-w-7xl mx-auto">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <span class="text-xl md:text-2xl font-bold text-text-primary dark:text-text-dark-primary transition-colors">AI Document Q&A</span>
+                    <span class="flex items-center text-xl md:text-2xl font-bold text-text-primary dark:text-text-dark-primary transition-colors">
+                        <img src="{{ asset('images/logo-dark.svg') }}" 
+                            alt="Wizardry Logo" 
+                            class="w-8 h-8 md:w-10 md:h-10 mr-3 dark:hidden">
+                        <img src="{{ asset('images/logo-light.svg') }}" 
+                            alt="Wizardry Logo" 
+                            class="w-8 h-8 md:w-10 md:h-10 mr-3 hidden dark:block">
+                        Wizardry
+                    </span>
                 </div>
                 
                 <!-- Desktop Navigation (hidden on mobile) -->
@@ -180,11 +197,11 @@
             <div class="mx-auto max-w-4xl py-16 sm:py-24 lg:py-32">
                 <div class="text-center mb-12 md:mb-16">
                     <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary transition-colors">
-                        Transform Documents into 
-                        <span class="text-primary-600 dark:text-primary-400">Interactive Learning</span>
+                        Transform Documents with 
+                        <span class="text-primary-600 dark:text-primary-400">Wizardry</span>
                     </h1>
                     <p class="mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-text-secondary dark:text-text-dark-secondary max-w-3xl mx-auto transition-colors px-4">
-                        Welcome to the easiest way to turn your study materials into powerful learning tools. Upload any document and instantly generate quiz questions or flashcards powered by AI.
+                        Welcome to Wizardry - the easiest way to turn your study materials into powerful learning tools. Upload any document and instantly generate quiz questions or flashcards powered by AI.
                     </p>
                     <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-sm text-text-tertiary dark:text-text-dark-tertiary transition-colors px-4">
                         <div class="flex items-center">

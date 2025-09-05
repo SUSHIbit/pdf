@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'AI Document Q&A') }}</title>
+    <title>{{ config('app.name', 'Wizardry') }}</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <meta name="theme-color" content="#3B82F6">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -52,8 +60,14 @@
         <div class="w-full max-w-md mb-8">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
-                <a href="/" class="text-xl md:text-2xl font-bold text-text-primary dark:text-text-dark-primary transition-colors">
-                    AI Document Q&A
+                <a href="/" class="flex items-center text-xl md:text-2xl font-bold text-text-primary dark:text-text-dark-primary transition-colors">
+                    <img src="{{ asset('images/logo-dark.svg') }}" 
+                        alt="Wizardry Logo" 
+                        class="w-8 h-8 md:w-10 md:h-10 mr-3 dark:hidden">
+                    <img src="{{ asset('images/logo-light.svg') }}" 
+                        alt="Wizardry Logo" 
+                        class="w-8 h-8 md:w-10 md:h-10 mr-3 hidden dark:block">
+                    Wizardry
                 </a>
                 
                 <!-- Theme Toggle -->

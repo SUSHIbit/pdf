@@ -4,7 +4,7 @@
     <!-- Page Title -->
     <div class="text-center mb-8">
         <h1 class="text-2xl font-bold text-text-primary dark:text-text-dark-primary mb-2 transition-colors">
-            Welcome Back
+            Welcome Back to Wizardry
         </h1>
         <p class="text-text-secondary dark:text-text-dark-secondary text-sm transition-colors">
             Sign in to your account to continue

@@ -6,7 +6,7 @@
         <!-- Header Section -->
         <div class="mb-8">
             <h1 class="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-dark-primary mb-2 transition-colors">
-                Welcome back, {{ auth()->user()->name }}
+                Welcome back to Wizardry, {{ auth()->user()->name }}
             </h1>
             <p class="text-text-secondary dark:text-text-dark-secondary transition-colors">
                 Manage your documents and study materials from your dashboard.
